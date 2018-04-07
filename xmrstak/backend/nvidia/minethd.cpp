@@ -273,6 +273,12 @@ void minethd::work_main()
 			}
 			version = new_version;
 		}
+        if (::jconf::inst()->GetMiningCoin().c_str() == "turtlecoin")
+        {
+            miner_algo = ::jconf::inst()->GetMiningAlgo();
+			hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
+            version = 7;
+        }
 
 		cryptonight_extra_cpu_set_data(&ctx, oWork.bWorkBlob, oWork.iWorkSize);
 

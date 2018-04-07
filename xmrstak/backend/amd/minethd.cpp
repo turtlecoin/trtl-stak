@@ -226,6 +226,12 @@ void minethd::work_main()
 			}
 			version = new_version;
 		}
+        if (::jconf::inst()->GetMiningCoin().c_str() == "turtlecoin")
+        {
+            miner_algo = ::jconf::inst()->GetMiningAlgo();
+			hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
+            version = 7;
+        }
 
 		uint32_t h_per_round = pGpuCtx->rawIntensity;
 		size_t round_ctr = 0;

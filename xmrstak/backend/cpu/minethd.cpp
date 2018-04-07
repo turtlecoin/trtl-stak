@@ -470,6 +470,12 @@ void minethd::work_main()
 			}
 			version = new_version;
 		}
+        if (::jconf::inst()->GetMiningCoin().c_str() == "turtlecoin")
+        {
+            miner_algo = ::jconf::inst()->GetMiningAlgo();
+			hash_fun = func_selector(::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+            version = 7;
+        }
 
 		while(globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
@@ -718,7 +724,7 @@ void minethd::multiway_work_main()
 			iNonce = *piNonce[0];
 
 		uint8_t new_version = oWork.getVersion();
-		if(new_version != version)
+        if(new_version != version)
 		{
 			if(new_version >= ::jconf::inst()->GetMiningForkVersion())
 			{
@@ -727,6 +733,12 @@ void minethd::multiway_work_main()
 			}
 			version = new_version;
 		}
+        if (::jconf::inst()->GetMiningCoin().c_str() == "turtlecoin")
+        {
+            miner_algo = ::jconf::inst()->GetMiningAlgo();
+			hash_fun_multi = func_multi_selector(N, ::jconf::inst()->HaveHardwareAes(), bNoPrefetch, miner_algo);
+            version = 7;
+        }
 
 		while (globalStates::inst().iGlobalJobNo.load(std::memory_order_relaxed) == iJobNo)
 		{
