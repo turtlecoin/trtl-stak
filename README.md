@@ -1,7 +1,8 @@
 ###### fireice-uk's and psychocrypt's
-# XMR-Stak - Monero/Aeon All-in-One Mining Software
+# trtl-stak -TurtleCoin, Monero, Aeon All-in-One Mining Software
 
-**XMR-Stak is ready for the POW change of Monero-v7, Aeon-v7 and Sumukoin-v3**
+### This is just a TRTL adaptation of xmr-stak because it wasn't ready yet when we needed it. Anything that can mine cryptonote-lite variant 1 will do just fine, and once the actual xmr-stak integrates that functionality, you should use that instead. -RockSteady
+
 
 XMR-Stak is a universal Stratum pool miner. This miner supports CPUs, AMD and NVIDIA gpus and can be used to mine the crypto currency Monero and Aeon.
 
