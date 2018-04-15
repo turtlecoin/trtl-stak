@@ -273,7 +273,7 @@ void minethd::work_main()
 			}
 			version = new_version;
 		}
-        if (::jconf::inst()->GetMiningCoin().c_str() == "turtlecoin")
+        if (strcmp(::jconf::inst()->GetMiningCoin().c_str(), "turtlecoin") == 0)
         {
             miner_algo = ::jconf::inst()->GetMiningAlgo();
 			hash_fun = cpu::minethd::func_selector(::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
