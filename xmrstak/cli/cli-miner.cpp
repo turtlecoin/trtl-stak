@@ -53,6 +53,61 @@
 #	define strcasecmp _stricmp
 #	include <windows.h>
 #	include "xmrstak/misc/uac.hpp"
+
+int get_exe_path(char* buffer, size_t* size) {
+	int utf8_len, utf16_buffer_len, utf16_len;
+	WCHAR* utf16_buffer;
+	
+	if (buffer == NULL || size == NULL || *size == 0) return -1;	
+
+	if (*size > 32768) {
+		// windows paths can never be longer than this.
+		utf16_buffer_len = 32768;
+	} else {
+		utf16_buffer_len = (int)*size;
+	}
+
+	utf16_buffer = (WCHAR*)malloc(sizeof(WCHAR)* utf16_buffer_len);
+	if (!utf16_buffer) return -2;
+	
+	// get the path as utf-16.
+	utf16_len = GetModuleFileNameW(NULL, utf16_buffer, utf16_buffer_len);
+	if (utf16_len <= 0) return -3;
+
+	// utf16_len contains the length, not including the terminating null.
+	utf16_buffer[utf16_len] = L'\0';
+
+	// convert to utf-8
+	utf8_len = WideCharToMultiByte(CP_UTF8,
+		0,
+		utf16_buffer,
+		-1,
+		buffer,
+		(int)*size,
+		NULL,
+		NULL);
+	if (utf8_len == 0) return -4;
+
+	free(utf16_buffer);
+
+	// utf8_len does include the terminating null at this point, but the returned size shouldn't.
+	*size = utf8_len - 1;
+	return 0;
+}
+#else
+#include <stddef.h>
+#include <unistd.h>
+
+int get_exe_path(char* buffer, size_t* size) {
+  ssize_t n;
+  if (buffer == NULL || size == NULL || *size == 0) return -1;
+  n = *size - 1;
+  if (n > 0) n = readlink("/proc/self/exe", buffer, n);
+  if (n == -1) return -2;
+  buffer[n] = '\0';
+  *size = n;
+  return 0;
+}
 #endif // _WIN32
 
 int do_benchmark(int block_version, int wait_sec, int work_sec);
@@ -408,8 +463,57 @@ int main(int argc, char *argv[])
 		params::inst().executablePrefix = std::string(pathWithName, 0, pos);
 		params::inst().executablePrefix += separator;
 	}
+	else
+	{
+		// in case, if run without params from anywhere with the env's PATH has been set.
+		// actually this can supplant all above 'find the executablePrefix' implementation.
+		char executablePrefix[FILENAME_MAX] = { 0 };
+		size_t ep_size = FILENAME_MAX;
+		if (*executablePrefix) {
+			params::inst().executablePrefix = executablePrefix;
+		} else {
+			bool success_getexepath = false;
+			if (get_exe_path(executablePrefix, &ep_size) >= 0) {
+				if (ep_size < FILENAME_MAX - 20) {
+#					ifdef _WIN32
+					char *pexecP = strrchr(executablePrefix, '\\');
+#					else
+					char *pexecP = strrchr(executablePrefix, '/');
+#					endif
+					if (pexecP) {
+						strcpy(pexecP + 1, "");
+						params::inst().executablePrefix = executablePrefix;
+						success_getexepath = true;
+					}
+				}
+			}
+			if (!success_getexepath) params::inst().executablePrefix = params::inst().binaryName;
+		}
+	}
 
 	params::inst().minerArg0 = argv[0];
+	
+	// if run without params
+	if (argc == 1) {
+		// set default config files' fullpath name using binary's executablePrefix
+		params::inst().configFile = params::inst().executablePrefix + params().configFile;
+		params::inst().configFilePools = params::inst().executablePrefix + params().configFilePools;
+		params::inst().configFileCPU = params::inst().executablePrefix + params().configFileCPU;
+		params::inst().configFileAMD = params::inst().executablePrefix + params().configFileAMD;
+		params::inst().configFileNVIDIA = params::inst().executablePrefix + params().configFileNVIDIA;
+		// params::inst().useCPU uses its default value, for auto creation of cpu.txt file when necessary.
+		// no need to set useCPU's value regarding whether cpu.txt exists or not
+		params::inst().useAMD = configEditor::file_exist(params::inst().configFileAMD);
+		params::inst().useNVIDIA = configEditor::file_exist(params::inst().configFileNVIDIA);
+		// if amd and/or nvida config files exist but no cpu.txt, run with safely assumed that it doesn't use cpu.txt,
+		// params::inst().useCPU can be set as false to prevent both cpu.txt auto creation and running using it.
+		if ((params::inst().useAMD || params::inst().useNVIDIA) && !configEditor::file_exist(params::inst().configFileCPU)) {
+			params::inst().useCPU = false;
+		}
+	}
+	// if run with params
+	else
+	{
 	params::inst().minerArgs.reserve(argc * 16);
 	for(int i = 1; i < argc; i++)
 	{
@@ -721,6 +825,7 @@ int main(int argc, char *argv[])
 			return 1;
 		}
 	}
+	} // end of if run with params
 
 	// check if we need a guided start
 	if(!configEditor::file_exist(params::inst().configFile))
