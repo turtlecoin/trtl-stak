@@ -35,8 +35,8 @@ R"===(
 inline uint2 amd_bitalign( const uint2 src0, const uint2 src1, const uint src2)
 {
 	uint2 result;
-	result.s0 =  (uint) (((((long)src0.s0) << 32) | (long)src1.s0) >> (src2));
-	result.s1 =  (uint) (((((long)src0.s1) << 32) | (long)src1.s1) >> (src2));
+	result.s0 =  (uint) (((((ulong)src0.s0) << 32) | (ulong)src1.s0) >> (src2));
+	result.s1 =  (uint) (((((ulong)src0.s1) << 32) | (ulong)src1.s1) >> (src2));
 	return result;
 }
 #endif
@@ -78,6 +78,8 @@ inline int amd_bfe(const uint src0, const uint offset, const uint width)
 }
 #endif
 
+//#include "opencl/fast_int_math_v2.cl"
+XMRSTAK_INCLUDE_FAST_INT_MATH_V2
 //#include "opencl/wolf-aes.cl"
 XMRSTAK_INCLUDE_WOLF_AES
 //#include "opencl/wolf-skein.cl"
@@ -89,7 +91,7 @@ XMRSTAK_INCLUDE_BLAKE256
 //#include "opencl/groestl256.cl"
 XMRSTAK_INCLUDE_GROESTL256
 
-static const __constant ulong keccakf_rndc[24] = 
+static const __constant ulong keccakf_rndc[24] =
 {
     0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
     0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
@@ -101,7 +103,7 @@ static const __constant ulong keccakf_rndc[24] =
     0x8000000000008080, 0x0000000080000001, 0x8000000080008008
 };
 
-static const __constant uchar sbox[256] = 
+static const __constant uchar sbox[256] =
 {
 	0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
 	0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -124,7 +126,7 @@ static const __constant uchar sbox[256] =
 
 void keccakf1600(ulong *s)
 {
-    for(int i = 0; i < 24; ++i) 
+    for(int i = 0; i < 24; ++i)
     {
 		ulong bc[5], tmp1, tmp2;
         bc[0] = s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20] ^ rotate(s[2] ^ s[7] ^ s[12] ^ s[17] ^ s[22], 1UL);
@@ -132,9 +134,9 @@ void keccakf1600(ulong *s)
         bc[2] = s[2] ^ s[7] ^ s[12] ^ s[17] ^ s[22] ^ rotate(s[4] ^ s[9] ^ s[14] ^ s[19] ^ s[24], 1UL);
         bc[3] = s[3] ^ s[8] ^ s[13] ^ s[18] ^ s[23] ^ rotate(s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20], 1UL);
         bc[4] = s[4] ^ s[9] ^ s[14] ^ s[19] ^ s[24] ^ rotate(s[1] ^ s[6] ^ s[11] ^ s[16] ^ s[21], 1UL);
-        
+
         tmp1 = s[1] ^ bc[0];
-        
+
         s[0] ^= bc[4];
         s[1] = rotate(s[6] ^ bc[0], 44UL);
         s[6] = rotate(s[9] ^ bc[3], 20UL);
@@ -160,7 +162,7 @@ void keccakf1600(ulong *s)
         s[11] = rotate(s[7] ^ bc[1], 6UL);
         s[7] = rotate(s[10] ^ bc[4], 3UL);
         s[10] = rotate(tmp1, 1UL);
-        
+
         tmp1 = s[0]; tmp2 = s[1]; s[0] = bitselect(s[0] ^ s[2], s[0], s[1]); s[1] = bitselect(s[1] ^ s[3], s[1], s[2]); s[2] = bitselect(s[2] ^ s[4], s[2], s[3]); s[3] = bitselect(s[3] ^ tmp1, s[3], s[4]); s[4] = bitselect(s[4] ^ tmp2, s[4], tmp1);
         tmp1 = s[5]; tmp2 = s[6]; s[5] = bitselect(s[5] ^ s[7], s[5], s[6]); s[6] = bitselect(s[6] ^ s[8], s[6], s[7]); s[7] = bitselect(s[7] ^ s[9], s[7], s[8]); s[8] = bitselect(s[8] ^ tmp1, s[8], s[9]); s[9] = bitselect(s[9] ^ tmp2, s[9], tmp1);
         tmp1 = s[10]; tmp2 = s[11]; s[10] = bitselect(s[10] ^ s[12], s[10], s[11]); s[11] = bitselect(s[11] ^ s[13], s[11], s[12]); s[12] = bitselect(s[12] ^ s[14], s[12], s[13]); s[13] = bitselect(s[13] ^ tmp1, s[13], s[14]); s[14] = bitselect(s[14] ^ tmp2, s[14], tmp1);
@@ -170,23 +172,23 @@ void keccakf1600(ulong *s)
     }
 }
 
-static const __constant uint keccakf_rotc[24] = 
+static const __constant uint keccakf_rotc[24] =
 {
-    1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14, 
+    1,  3,  6,  10, 15, 21, 28, 36, 45, 55, 2,  14,
     27, 41, 56, 8,  25, 43, 62, 18, 39, 61, 20, 44
 };
 
-static const __constant uint keccakf_piln[24] = 
+static const __constant uint keccakf_piln[24] =
 {
-    10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4, 
-    15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1 
+    10, 7,  11, 17, 18, 3, 5,  16, 8,  21, 24, 4,
+    15, 23, 19, 13, 12, 2, 20, 14, 22, 9,  6,  1
 };
 
 void keccakf1600_1(ulong *st)
 {
     int i, round;
     ulong t, bc[5];
-	
+
 	#pragma unroll 1
     for(round = 0; round < 24; ++round)
     {
@@ -197,7 +199,7 @@ void keccakf1600_1(ulong *st)
         bc[2] = st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22];
         bc[3] = st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23];
         bc[4] = st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24];
-		
+
 		#pragma unroll 1
         for (i = 0; i < 5; ++i) {
             t = bc[(i + 4) % 5] ^ rotate(bc[(i + 1) % 5], 1UL);
@@ -222,20 +224,20 @@ void keccakf1600_1(ulong *st)
         //tmp1 = st[10]; tmp2 = st[11]; st[10] = bitselect(st[10] ^ st[12], st[10], st[11]); st[11] = bitselect(st[11] ^ st[13], st[11], st[12]); st[12] = bitselect(st[12] ^ st[14], st[12], st[13]); st[13] = bitselect(st[13] ^ tmp1, st[13], st[14]); st[14] = bitselect(st[14] ^ tmp2, st[14], tmp1);
         //tmp1 = st[15]; tmp2 = st[16]; st[15] = bitselect(st[15] ^ st[17], st[15], st[16]); st[16] = bitselect(st[16] ^ st[18], st[16], st[17]); st[17] = bitselect(st[17] ^ st[19], st[17], st[18]); st[18] = bitselect(st[18] ^ tmp1, st[18], st[19]); st[19] = bitselect(st[19] ^ tmp2, st[19], tmp1);
         //tmp1 = st[20]; tmp2 = st[21]; st[20] = bitselect(st[20] ^ st[22], st[20], st[21]); st[21] = bitselect(st[21] ^ st[23], st[21], st[22]); st[22] = bitselect(st[22] ^ st[24], st[22], st[23]); st[23] = bitselect(st[23] ^ tmp1, st[23], st[24]); st[24] = bitselect(st[24] ^ tmp2, st[24], tmp1);
-        
+
         #pragma unroll 1
         for(int i = 0; i < 25; i += 5)
-        {	
+        {
 			ulong tmp[5];
-			
+
 			#pragma unroll 1
 			for(int x = 0; x < 5; ++x)
 				tmp[x] = bitselect(st[i + x] ^ st[i + ((x + 2) % 5)], st[i + x], st[i + ((x + 1) % 5)]);
-			
+
 			#pragma unroll 1
 			for(int x = 0; x < 5; ++x) st[i + x] = tmp[x];
         }
-        
+
         //  Iota
         st[0] ^= keccakf_rndc[round];
     }
@@ -246,7 +248,7 @@ void keccakf1600_2(ulong *st)
 {
     int i, round;
     ulong t, bc[5];
-	
+
 	#pragma unroll 1
     for(round = 0; round < 24; ++round)
     {
@@ -257,7 +259,7 @@ void keccakf1600_2(ulong *st)
         //bc[2] = st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22];
         //bc[3] = st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23];
         //bc[4] = st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24];
-		
+
 		/*
 		#pragma unroll
         for (i = 0; i < 5; ++i) {
@@ -269,43 +271,43 @@ void keccakf1600_2(ulong *st)
             st[i + 20] ^= t;
         }
 		*/
-		
+
 		bc[0] = st[0] ^ st[5] ^ st[10] ^ st[15] ^ st[20] ^ rotate(st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22], 1UL);
 		bc[1] = st[1] ^ st[6] ^ st[11] ^ st[16] ^ st[21] ^ rotate(st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23], 1UL);
 		bc[2] = st[2] ^ st[7] ^ st[12] ^ st[17] ^ st[22] ^ rotate(st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24], 1UL);
 		bc[3] = st[3] ^ st[8] ^ st[13] ^ st[18] ^ st[23] ^ rotate(st[0] ^ st[5] ^ st[10] ^ st[15] ^ st[20], 1UL);
 		bc[4] = st[4] ^ st[9] ^ st[14] ^ st[19] ^ st[24] ^ rotate(st[1] ^ st[6] ^ st[11] ^ st[16] ^ st[21], 1UL);
-		
+
 		st[0] ^= bc[4];
 		st[5] ^= bc[4];
 		st[10] ^= bc[4];
 		st[15] ^= bc[4];
 		st[20] ^= bc[4];
-		
+
 		st[1] ^= bc[0];
 		st[6] ^= bc[0];
 		st[11] ^= bc[0];
 		st[16] ^= bc[0];
 		st[21] ^= bc[0];
-		
+
 		st[2] ^= bc[1];
 		st[7] ^= bc[1];
 		st[12] ^= bc[1];
 		st[17] ^= bc[1];
 		st[22] ^= bc[1];
-		
+
 		st[3] ^= bc[2];
 		st[8] ^= bc[2];
 		st[13] ^= bc[2];
 		st[18] ^= bc[2];
 		st[23] ^= bc[2];
-		
+
 		st[4] ^= bc[3];
 		st[9] ^= bc[3];
 		st[14] ^= bc[3];
 		st[19] ^= bc[3];
 		st[24] ^= bc[3];
-		
+
         // Rho Pi
         t = st[1];
         #pragma unroll
@@ -314,11 +316,11 @@ void keccakf1600_2(ulong *st)
             st[keccakf_piln[i]] = rotate(t, (ulong)keccakf_rotc[i]);
             t = bc[0];
         }
-		
-		
-		
+
+
+
 		/*ulong tmp1 = st[1] ^ bc[0];
-        
+
         st[0] ^= bc[4];
         st[1] = rotate(st[6] ^ bc[0], 44UL);
         st[6] = rotate(st[9] ^ bc[3], 20UL);
@@ -345,26 +347,26 @@ void keccakf1600_2(ulong *st)
         st[7] = rotate(st[10] ^ bc[4], 3UL);
         st[10] = rotate(tmp1, 1UL);
 		*/
-		
-		
+
+
         //ulong tmp1 = st[0]; ulong tmp2 = st[1]; st[0] = bitselect(st[0] ^ st[2], st[0], st[1]); st[1] = bitselect(st[1] ^ st[3], st[1], st[2]); st[2] = bitselect(st[2] ^ st[4], st[2], st[3]); st[3] = bitselect(st[3] ^ tmp1, st[3], st[4]); st[4] = bitselect(st[4] ^ tmp2, st[4], tmp1);
         //tmp1 = st[5]; tmp2 = st[6]; st[5] = bitselect(st[5] ^ st[7], st[5], st[6]); st[6] = bitselect(st[6] ^ st[8], st[6], st[7]); st[7] = bitselect(st[7] ^ st[9], st[7], st[8]); st[8] = bitselect(st[8] ^ tmp1, st[8], st[9]); st[9] = bitselect(st[9] ^ tmp2, st[9], tmp1);
         //tmp1 = st[10]; tmp2 = st[11]; st[10] = bitselect(st[10] ^ st[12], st[10], st[11]); st[11] = bitselect(st[11] ^ st[13], st[11], st[12]); st[12] = bitselect(st[12] ^ st[14], st[12], st[13]); st[13] = bitselect(st[13] ^ tmp1, st[13], st[14]); st[14] = bitselect(st[14] ^ tmp2, st[14], tmp1);
         //tmp1 = st[15]; tmp2 = st[16]; st[15] = bitselect(st[15] ^ st[17], st[15], st[16]); st[16] = bitselect(st[16] ^ st[18], st[16], st[17]); st[17] = bitselect(st[17] ^ st[19], st[17], st[18]); st[18] = bitselect(st[18] ^ tmp1, st[18], st[19]); st[19] = bitselect(st[19] ^ tmp2, st[19], tmp1);
         //tmp1 = st[20]; tmp2 = st[21]; st[20] = bitselect(st[20] ^ st[22], st[20], st[21]); st[21] = bitselect(st[21] ^ st[23], st[21], st[22]); st[22] = bitselect(st[22] ^ st[24], st[22], st[23]); st[23] = bitselect(st[23] ^ tmp1, st[23], st[24]); st[24] = bitselect(st[24] ^ tmp2, st[24], tmp1);
-        
+
         #pragma unroll
         for(int i = 0; i < 25; i += 5)
         {
 			ulong tmp1 = st[i], tmp2 = st[i + 1];
-			
+
 			st[i] = bitselect(st[i] ^ st[i + 2], st[i], st[i + 1]);
 			st[i + 1] = bitselect(st[i + 1] ^ st[i + 3], st[i + 1], st[i + 2]);
 			st[i + 2] = bitselect(st[i + 2] ^ st[i + 4], st[i + 2], st[i + 3]);
 			st[i + 3] = bitselect(st[i + 3] ^ tmp1, st[i + 3], st[i + 4]);
 			st[i + 4] = bitselect(st[i + 4] ^ tmp2, st[i + 4], tmp1);
         }
-        
+
         //  Iota
         st[0] ^= keccakf_rndc[round];
     }
@@ -376,22 +378,22 @@ R"===(
 void CNKeccak(ulong *output, ulong *input)
 {
 	ulong st[25];
-	
+
 	// Copy 72 bytes
 	for(int i = 0; i < 9; ++i) st[i] = input[i];
-	
+
 	// Last four and '1' bit for padding
 	//st[9] = as_ulong((uint2)(((uint *)input)[18], 0x00000001U));
-	
+
 	st[9] = (input[9] & 0x00000000FFFFFFFFUL) | 0x0000000100000000UL;
-	
+
 	for(int i = 10; i < 25; ++i) st[i] = 0x00UL;
-	
+
 	// Last bit of padding
 	st[16] = 0x8000000000000000UL;
-	
+
 	keccakf1600_1(st);
-	
+
 	for(int i = 0; i < 25; ++i) output[i] = st[i];
 }
 
@@ -408,13 +410,16 @@ void AESExpandKey256(uint *keybuf)
 	{
 		// For 256-bit keys, an sbox permutation is done every other 4th uint generated, AND every 8th
 		uint t = ((!(c & 7)) || ((c & 7) == 4)) ? SubWord(keybuf[c - 1]) : keybuf[c - 1];
-		
+
 		// If the uint we're generating has an index that is a multiple of 8, rotate and XOR with the round constant,
 		// then XOR this with previously generated uint. If it's 4 after a multiple of 8, only the sbox permutation
 		// is done, followed by the XOR. If neither are true, only the XOR with the previously generated uint is done.
 		keybuf[c] = keybuf[c - 8] ^ ((!(c & 7)) ? rotate(t, 24U) ^ as_uint((uchar4)(rcon[i++], 0U, 0U, 0U)) : t);
 	}
 }
+
+)==="
+R"===(
 
 #define MEM_CHUNK (1<<MEM_CHUNK_EXPONENT)
 
@@ -434,7 +439,7 @@ inline ulong getIdx()
 }
 
 #define mix_and_propagate(xin) (xin)[(get_local_id(1)) % 8][get_local_id(0)] ^ (xin)[(get_local_id(1) + 1) % 8][get_local_id(0)]
-		
+
 #define JOIN_DO(x,y) x##y
 #define JOIN(x,y) JOIN_DO(x,y)
 
@@ -460,7 +465,7 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 	}
 
 	barrier(CLK_LOCAL_MEM_FENCE);
-		
+
 #if(COMP_MODE==1)
 	// do not use early return here
 	if(gIdx < Threads)
@@ -482,9 +487,14 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 		State[10] = input[10];
 
 		((uint *)State)[9] &= 0x00FFFFFFU;
-		((uint *)State)[9] |= ((get_global_id(0)) & 0xFF) << 24;
+		((uint *)State)[9] |= (((uint)get_global_id(0)) & 0xFF) << 24;
 		((uint *)State)[10] &= 0xFF000000U;
-		((uint *)State)[10] |= ((get_global_id(0) >> 8));
+		/* explicit cast to `uint` is required because some OpenCL implementations (e.g. NVIDIA)
+		 * handle get_global_id and get_global_offset as signed long long int and add
+		 * 0xFFFFFFFF... to `get_global_id` if we set on host side a 32bit offset where the first bit is `1`
+		 * (even if it is correct casted to unsigned on the host)
+		 */
+		((uint *)State)[10] |= (((uint)get_global_id(0) >> 8));
 
 		for(int i = 11; i < 25; ++i) State[i] = 0x00UL;
 
@@ -512,17 +522,18 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 	}
 
 	mem_fence(CLK_LOCAL_MEM_FENCE);
-		
-// cryptonight_heavy
-#if (ALGO == 4)
+
+// cryptonight_heavy || cryptonight_haven || cryptonight_bittube2
+#if (ALGO == 4 || ALGO == 9 || ALGO == 10)
 	__local uint4 xin[8][WORKSIZE];
 
-	/* Also left over threads performe this loop.
+	/* Also left over threads perform this loop.
 	 * The left over thread results will be ignored
 	 */
+	#pragma unroll 16
 	for(size_t i=0; i < 16; i++)
 	{
-		#pragma unroll
+		#pragma unroll 10
 		for(int j = 0; j < 10; ++j)
 			text = AES_Round(AES0, AES1, AES2, AES3, text, ((uint4 *)ExpandedKey1)[j]);
 		barrier(CLK_LOCAL_MEM_FENCE);
@@ -551,17 +562,45 @@ __kernel void JOIN(cn0,ALGO)(__global ulong *input, __global uint4 *Scratchpad, 
 	mem_fence(CLK_GLOBAL_MEM_FENCE);
 }
 
+// cryptonight_monero_v8 && NVIDIA
+#if(ALGO==11 && defined(__NV_CL_C_VERSION))
+#	define SCRATCHPAD_CHUNK(N) (*(__local uint4*)((__local uchar*)(scratchpad_line) + (idxS ^ (N << 4))))
+#	define SCRATCHPAD_CHUNK_GLOBAL (*((__global uint16*)(Scratchpad + (IDX((idx0 & 0x1FFFC0U) >> 4)))))
+#else
+#	define SCRATCHPAD_CHUNK(N) (Scratchpad[IDX(((idx0) >> 4) ^ N)])
+#endif
+
 __attribute__((reqd_work_group_size(WORKSIZE, 1, 1)))
 __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states, ulong Threads
-// cryptonight_monero || cryptonight_aeon
-#if(ALGO == 3 || ALGO == 5)
+// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc || cryptonight_stellite || cryptonight_masari || cryptonight_bittube2
+#if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7 || ALGO == 8 || ALGO == 10)
 , __global ulong *input
 #endif
 )
 {
-	ulong a[2], b[2];
+	ulong a[2];
+
+// cryptonight_monero_v8
+#if(ALGO==11)
+	ulong b[4];
+	uint4 b_x[2];
+// NVIDIA
+#	ifdef __NV_CL_C_VERSION
+	__local uint16 scratchpad_line_buf[WORKSIZE];
+ 	__local uint16* scratchpad_line = scratchpad_line_buf + get_local_id(0);
+#	endif
+#else
+	ulong b[2];
+	uint4 b_x[1];
+#endif
 	__local uint AES0[256], AES1[256], AES2[256], AES3[256];
 
+// cryptonight_monero_v8
+#if(ALGO==11)
+	__local uint RCP[256];
+	uint2 division_result;
+	uint sqrt_result;
+#endif
 	const ulong gIdx = getIdx();
 
 	for(int i = get_local_id(0); i < 256; i += WORKSIZE)
@@ -571,13 +610,18 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 		AES1[i] = rotate(tmp, 8U);
 		AES2[i] = rotate(tmp, 16U);
 		AES3[i] = rotate(tmp, 24U);
+// cryptonight_monero_v8
+#if(ALGO==11)
+		RCP[i] = RCP_C[i];
+#endif
 	}
 
 	barrier(CLK_LOCAL_MEM_FENCE);
-#if(ALGO == 3 || ALGO == 5)
+// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc || cryptonight_stellite || cryptonight_masari || cryptonight_bittube2
+#if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7 || ALGO == 8 || ALGO == 10)
     uint2 tweak1_2;
 #endif
-	uint4 b_x;
+
 #if(COMP_MODE==1)
 	// do not use early return here
 	if(gIdx < Threads)
@@ -597,12 +641,23 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 		a[1] = states[1] ^ states[5];
 		b[1] = states[3] ^ states[7];
 
-		b_x = ((uint4 *)b)[0];
-#if(ALGO == 3 || ALGO == 5)
+		b_x[0] = ((uint4 *)b)[0];
+
+// cryptonight_monero_v8
+#if(ALGO==11)
+		a[1] = states[1] ^ states[5];
+		b[2] = states[8] ^ states[10];
+		b[3] = states[9] ^ states[11];
+		b_x[1] = ((uint4 *)b)[1];
+		division_result = as_uint2(states[12]);
+		sqrt_result = as_uint2(states[13]).s0;
+#endif
+// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc || cryptonight_stellite || cryptonight_masari || cryptonight_bittube2
+#if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7 || ALGO == 8 || ALGO == 10)
 		tweak1_2 = as_uint2(input[4]);
 		tweak1_2.s0 >>= 24;
 		tweak1_2.s0 |= tweak1_2.s1 << 8;
-		tweak1_2.s1 = get_global_id(0);
+		tweak1_2.s1 = (uint)get_global_id(0);
 		tweak1_2 ^= as_uint2(states[24]);
 #endif
 	}
@@ -614,55 +669,158 @@ __kernel void JOIN(cn1,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	if(gIdx < Threads)
 #endif
 	{
-		ulong idx0 = a[0];
+		ulong idx0 = a[0] & MASK;
 
-		#pragma unroll 8
+		#pragma unroll CN_UNROLL
 		for(int i = 0; i < ITERATIONS; ++i)
 		{
 			ulong c[2];
-
-			((uint4 *)c)[0] = Scratchpad[IDX((idx0 & MASK) >> 4)];
-			((uint4 *)c)[0] = AES_Round(AES0, AES1, AES2, AES3, ((uint4 *)c)[0], ((uint4 *)a)[0]);
-
-			b_x ^= ((uint4 *)c)[0];
-#if(ALGO == 3 || ALGO == 5)
-			uint table = 0x75310U;
-			uint index = ((b_x.s2 >> 26) & 12) | ((b_x.s2 >> 23) & 2);
-			b_x.s2 ^= ((table >> index) & 0x30U) << 24;
+// cryptonight_monero_v8 && NVIDIA
+#if(ALGO==11 && defined(__NV_CL_C_VERSION))
+			ulong idxS = idx0 & 0x30;
+ 			*scratchpad_line = SCRATCHPAD_CHUNK_GLOBAL;
 #endif
-			Scratchpad[IDX((idx0 & MASK) >> 4)] = b_x;
 
-			uint4 tmp;
-			tmp = Scratchpad[IDX((c[0] & MASK) >> 4)];
-
-			a[1] += c[0] * as_ulong2(tmp).s0;
-			a[0] += mul_hi(c[0], as_ulong2(tmp).s0);
-
-
-#if(ALGO == 3 || ALGO == 5)
-			((uint2 *)&(a[1]))[0] ^= tweak1_2;
-			Scratchpad[IDX((c[0] & MASK) >> 4)] = ((uint4 *)a)[0];
-			((uint2 *)&(a[1]))[0] ^= tweak1_2;
+			((uint4 *)c)[0] = SCRATCHPAD_CHUNK(0);
+// cryptonight_bittube2
+#if(ALGO == 10)
+			((uint4 *)c)[0] = AES_Round_bittube2(AES0, AES1, AES2, AES3, ((uint4 *)c)[0], ((uint4 *)a)[0]);
 #else
-			Scratchpad[IDX((c[0] & MASK) >> 4)] = ((uint4 *)a)[0];
+			((uint4 *)c)[0] = AES_Round(AES0, AES1, AES2, AES3, ((uint4 *)c)[0], ((uint4 *)a)[0]);
+#endif
+
+// cryptonight_monero_v8
+#if(ALGO==11)
+			{
+				ulong2 chunk1 = as_ulong2(SCRATCHPAD_CHUNK(1));
+				ulong2 chunk2 = as_ulong2(SCRATCHPAD_CHUNK(2));
+				ulong2 chunk3 = as_ulong2(SCRATCHPAD_CHUNK(3));
+				SCRATCHPAD_CHUNK(1) = as_uint4(chunk3 + ((ulong2 *)(b_x + 1))[0]);
+				SCRATCHPAD_CHUNK(2) = as_uint4(chunk1 + ((ulong2 *)b_x)[0]);
+				SCRATCHPAD_CHUNK(3) = as_uint4(chunk2 + ((ulong2 *)a)[0]);
+			}
+#endif
+
+// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc || cryptonight_stellite || cryptonight_masari || cryptonight_bittube2
+#if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7 || ALGO == 8 || ALGO == 10)
+			uint table = 0x75310U;
+			b_x[0] ^= ((uint4 *)c)[0];
+// cryptonight_stellite
+#	if(ALGO == 7)
+			uint index = ((b_x[0].s2 >> 27) & 12) | ((b_x[0].s2 >> 23) & 2);
+#	else
+			uint index = ((b_x[0].s2 >> 26) & 12) | ((b_x[0].s2 >> 23) & 2);
+#	endif
+			b_x[0].s2 ^= ((table >> index) & 0x30U) << 24;
+			SCRATCHPAD_CHUNK(0) = b_x[0];
+			idx0 = c[0] & MASK;
+// cryptonight_monero_v8
+#elif(ALGO==11)
+			SCRATCHPAD_CHUNK(0) = b_x[0] ^ ((uint4 *)c)[0];
+#	ifdef __NV_CL_C_VERSION
+			// flush shuffled data
+			SCRATCHPAD_CHUNK_GLOBAL = *scratchpad_line;
+ 			idx0 = c[0] & MASK;
+ 			idxS = idx0 & 0x30;
+ 			*scratchpad_line = SCRATCHPAD_CHUNK_GLOBAL;
+#	else
+			idx0 = c[0] & MASK;
+#	endif
+#else
+			b_x[0] ^= ((uint4 *)c)[0];
+			SCRATCHPAD_CHUNK(0) = b_x[0];
+			idx0 = c[0] & MASK;
+#endif
+			uint4 tmp;
+			tmp = SCRATCHPAD_CHUNK(0);
+// cryptonight_monero_v8
+#if(ALGO==11)
+			// Use division and square root results from the _previous_ iteration to hide the latency
+			tmp.s0 ^= division_result.s0;
+			tmp.s1 ^= division_result.s1 ^ sqrt_result;
+ 			// Most and least significant bits in the divisor are set to 1
+			// to make sure we don't divide by a small or even number,
+			// so there are no shortcuts for such cases
+			const uint d = (((uint *)c)[0] + (sqrt_result << 1)) | 0x80000001UL;
+ 			// Quotient may be as large as (2^64 - 1)/(2^31 + 1) = 8589934588 = 2^33 - 4
+			// We drop the highest bit to fit both quotient and remainder in 32 bits
+			division_result = fast_div_v2(RCP, c[1], d);
+ 			// Use division_result as an input for the square root to prevent parallel implementation in hardware
+			sqrt_result = fast_sqrt_v2(c[0] + as_ulong(division_result));
+#endif
+			ulong2 result_mul;
+			result_mul.s0 = mul_hi(c[0], as_ulong2(tmp).s0);
+			result_mul.s1 = c[0] * as_ulong2(tmp).s0;
+// cryptonight_monero_v8
+#if(ALGO==11)
+			{
+				ulong2 chunk1 = as_ulong2(SCRATCHPAD_CHUNK(1)) ^ result_mul;
+				ulong2 chunk2 = as_ulong2(SCRATCHPAD_CHUNK(2));
+				result_mul ^= chunk2;
+				ulong2 chunk3 = as_ulong2(SCRATCHPAD_CHUNK(3));
+				SCRATCHPAD_CHUNK(1) = as_uint4(chunk3 + ((ulong2 *)(b_x + 1))[0]);
+				SCRATCHPAD_CHUNK(2) = as_uint4(chunk1 + ((ulong2 *)b_x)[0]);
+				SCRATCHPAD_CHUNK(3) = as_uint4(chunk2 + ((ulong2 *)a)[0]);
+			}
+#endif
+			a[1] += result_mul.s1;
+			a[0] += result_mul.s0;
+
+// cryptonight_monero || cryptonight_aeon || cryptonight_ipbc || cryptonight_stellite || cryptonight_masari || cryptonight_bittube2
+#if(ALGO == 3 || ALGO == 5 || ALGO == 6 || ALGO == 7 || ALGO == 8 || ALGO == 10)
+
+// cryptonight_ipbc || cryptonight_bittube2
+#	if(ALGO == 6 || ALGO == 10)
+			uint2 ipbc_tmp = tweak1_2 ^ ((uint2 *)&(a[0]))[0];
+			((uint2 *)&(a[1]))[0] ^= ipbc_tmp;
+			SCRATCHPAD_CHUNK(0) = ((uint4 *)a)[0];
+			((uint2 *)&(a[1]))[0] ^= ipbc_tmp;
+#	else
+			((uint2 *)&(a[1]))[0] ^= tweak1_2;
+			SCRATCHPAD_CHUNK(0) = ((uint4 *)a)[0];
+			((uint2 *)&(a[1]))[0] ^= tweak1_2;
+#	endif
+
+#else
+			SCRATCHPAD_CHUNK(0) = ((uint4 *)a)[0];
 #endif
 
 			((uint4 *)a)[0] ^= tmp;
-			idx0 = a[0];
 
-			b_x = ((uint4 *)c)[0];
-// cryptonight_heavy
-#if (ALGO == 4)
-			long n = *((__global long*)(Scratchpad + (IDX((idx0 & MASK) >> 4))));
-			int d = ((__global int*)(Scratchpad + (IDX((idx0 & MASK) >> 4))))[2];
-			long q = n / (d | 0x5);
-			*((__global long*)(Scratchpad + (IDX((idx0 & MASK) >> 4)))) = n ^ q;
-			idx0 = d ^ q;
+// cryptonight_monero_v8
+#if (ALGO == 11)
+#	if defined(__NV_CL_C_VERSION)
+			// flush shuffled data
+			SCRATCHPAD_CHUNK_GLOBAL = *scratchpad_line;
+#	endif
+			b_x[1] = b_x[0];
 #endif
+			b_x[0] = ((uint4 *)c)[0];
+			idx0 = a[0] & MASK;
+
+// cryptonight_heavy || cryptonight_bittube2
+#if (ALGO == 4 || ALGO == 10)
+			long n = *((__global long*)(Scratchpad + (IDX((idx0) >> 4))));
+			int d = ((__global int*)(Scratchpad + (IDX((idx0) >> 4))))[2];
+			long q = n / (d | 0x5);
+			*((__global long*)(Scratchpad + (IDX((idx0) >> 4)))) = n ^ q;
+			idx0 = (d ^ q) & MASK;
+// cryptonight_haven
+#elif (ALGO == 9)
+			long n = *((__global long*)(Scratchpad + (IDX((idx0) >> 4))));
+			int d = ((__global int*)(Scratchpad + (IDX((idx0) >> 4))))[2];
+			long q = n / (d | 0x5);
+			*((__global long*)(Scratchpad + (IDX((idx0) >> 4)))) = n ^ q;
+			idx0 = ((~d) ^ q) & MASK;
+#endif
+
 		}
 	}
 	mem_fence(CLK_GLOBAL_MEM_FENCE);
 }
+
+)==="
+R"===(
 
 __attribute__((reqd_work_group_size(WORKSIZE, 8, 1)))
 __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states, __global uint *Branch0, __global uint *Branch1, __global uint *Branch2, __global uint *Branch3, ulong Threads)
@@ -671,7 +829,7 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	uint ExpandedKey2[40];
 	ulong State[25];
 	uint4 text;
-	
+
 	const ulong gIdx = getIdx();
 
 	for(int i = get_local_id(1) * WORKSIZE + get_local_id(0);
@@ -717,8 +875,8 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	}
 
 	barrier(CLK_LOCAL_MEM_FENCE);
-
-#if (ALGO == 4)
+// cryptonight_heavy || cryptonight_haven || cryptonight_bittube2
+#if (ALGO == 4 || ALGO == 9 || ALGO == 10)
 	__local uint4 xin[8][WORKSIZE];
 #endif
 
@@ -727,7 +885,8 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 	if(gIdx < Threads)
 #endif
 	{
-#if (ALGO == 4)
+// cryptonight_heavy || cryptonight_haven || cryptonight_bittube2
+#if (ALGO == 4 || ALGO == 9 || ALGO == 10)
 		#pragma unroll 2
 		for(int i = 0; i < (MEMORY >> 7); ++i)
 		{
@@ -759,7 +918,7 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 			barrier(CLK_LOCAL_MEM_FENCE);
 			text = mix_and_propagate(xin);
 		}
-		
+
 #else
 		#pragma unroll 2
 		for(int i = 0; i < (MEMORY >> 7); ++i)
@@ -773,14 +932,15 @@ __kernel void JOIN(cn2,ALGO) (__global uint4 *Scratchpad, __global ulong *states
 #endif
 	}
 
-// cryptonight_heavy
-#if (ALGO == 4)
+// cryptonight_heavy or cryptonight_haven || cryptonight_bittube2
+#if (ALGO == 4 || ALGO == 9 || ALGO == 10)
 	/* Also left over threads perform this loop.
 	 * The left over thread results will be ignored
 	 */
+	#pragma unroll 16
 	for(size_t i=0; i < 16; i++)
 	{
-		#pragma unroll
+		#pragma unroll 10
 		for(int j = 0; j < 10; ++j)
 			text = AES_Round(AES0, AES1, AES2, AES3, text, ((uint4 *)ExpandedKey2)[j]);
 		barrier(CLK_LOCAL_MEM_FENCE);
@@ -835,7 +995,7 @@ R"===(
 __kernel void Skein(__global ulong *states, __global uint *BranchBuf, __global uint *output, ulong Target, ulong Threads)
 {
 	const ulong idx = get_global_id(0) - get_global_offset(0);
-	
+
 	// do not use early return here
 	if(idx < Threads)
 	{
@@ -884,10 +1044,10 @@ __kernel void Skein(__global ulong *states, __global uint *BranchBuf, __global u
 		{
 			ulong outIdx = atomic_inc(output + 0xFF);
 			if(outIdx < 0xFF)
-				output[outIdx] = BranchBuf[idx] + get_global_offset(0);
+				output[outIdx] = BranchBuf[idx] + (uint)get_global_offset(0);
 		}
 	}
-	mem_fence(CLK_GLOBAL_MEM_FENCE);	
+	mem_fence(CLK_GLOBAL_MEM_FENCE);
 }
 
 #define SWAP8(x)	as_ulong(as_uchar8(x).s76543210)
@@ -916,7 +1076,7 @@ __kernel void Skein(__global ulong *states, __global uint *BranchBuf, __global u
 __kernel void JH(__global ulong *states, __global uint *BranchBuf, __global uint *output, ulong Target, ulong Threads)
 {
 	const uint idx = get_global_id(0) - get_global_offset(0);
-	
+
 	// do not use early return here
 	if(idx < Threads)
 	{
@@ -960,7 +1120,7 @@ __kernel void JH(__global ulong *states, __global uint *BranchBuf, __global uint
 		{
 			ulong outIdx = atomic_inc(output + 0xFF);
 			if(outIdx < 0xFF)
-				output[outIdx] = BranchBuf[idx] + get_global_offset(0);
+				output[outIdx] = BranchBuf[idx] + (uint)get_global_offset(0);
 		}
 	}
 }
@@ -970,12 +1130,12 @@ __kernel void JH(__global ulong *states, __global uint *BranchBuf, __global uint
 __kernel void Blake(__global ulong *states, __global uint *BranchBuf, __global uint *output, ulong Target, ulong Threads)
 {
 	const uint idx = get_global_id(0) - get_global_offset(0);
-	
+
 	// do not use early return here
 	if(idx < Threads)
 	{
 		states += 25 * BranchBuf[idx];
-	
+
 		unsigned int m[16];
 		unsigned int v[16];
 		uint h[8];
@@ -1038,7 +1198,7 @@ __kernel void Blake(__global ulong *states, __global uint *BranchBuf, __global u
 		{
 			ulong outIdx = atomic_inc(output + 0xFF);
 			if(outIdx < 0xFF)
-				output[outIdx] = BranchBuf[idx] + get_global_offset(0);
+				output[outIdx] = BranchBuf[idx] + (uint)get_global_offset(0);
 		}
 	}
 }
@@ -1046,7 +1206,7 @@ __kernel void Blake(__global ulong *states, __global uint *BranchBuf, __global u
 __kernel void Groestl(__global ulong *states, __global uint *BranchBuf, __global uint *output, ulong Target, ulong Threads)
 {
 	const uint idx = get_global_id(0) - get_global_offset(0);
-	
+
 	// do not use early return here
 	if(idx < Threads)
 	{
@@ -1061,7 +1221,7 @@ __kernel void Groestl(__global ulong *states, __global uint *BranchBuf, __global
 		#pragma unroll 4
 		for(uint i = 0; i < 4; ++i)
 		{
-			ulong H[8], M[8];
+			volatile ulong H[8], M[8];
 
 			if(i < 3)
 			{
@@ -1099,7 +1259,7 @@ __kernel void Groestl(__global ulong *states, __global uint *BranchBuf, __global
 		{
 			ulong outIdx = atomic_inc(output + 0xFF);
 			if(outIdx < 0xFF)
-				output[outIdx] = BranchBuf[idx] + get_global_offset(0);
+				output[outIdx] = BranchBuf[idx] + (uint)get_global_offset(0);
 		}
 	}
 }

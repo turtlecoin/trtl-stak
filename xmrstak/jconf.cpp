@@ -51,8 +51,8 @@ using namespace rapidjson;
  * This enum needs to match index in oConfigValues, otherwise we will get a runtime error
  */
 enum configEnum {
-	aPoolList, sCurrency, bTlsSecureAlgo, iCallTimeout, iNetRetry, iGiveUpLimit, iVerboseLevel, bPrintMotd, iAutohashTime, 
-	bFlushStdout, bDaemonMode, sOutputFile, iHttpdPort, sHttpLogin, sHttpPass, bPreferIpv4, bAesOverride, sUseSlowMem 
+	aPoolList, sCurrency, bTlsSecureAlgo, iCallTimeout, iNetRetry, iGiveUpLimit, iVerboseLevel, bPrintMotd, iAutohashTime,
+	bDaemonMode, sOutputFile, iHttpdPort, sHttpLogin, sHttpPass, bPreferIpv4, bAesOverride, sUseSlowMem
 };
 
 struct configVal {
@@ -73,7 +73,6 @@ configVal oConfigValues[] = {
 	{ iVerboseLevel, "verbose_level", kNumberType },
 	{ bPrintMotd, "print_motd", kTrueType },
 	{ iAutohashTime, "h_print_time", kNumberType },
-	{ bFlushStdout, "flush_stdout", kTrueType},
 	{ bDaemonMode, "daemon_mode", kTrueType },
 	{ sOutputFile, "output_file", kStringType },
 	{ iHttpdPort, "httpd_port", kNumberType },
@@ -88,27 +87,32 @@ constexpr size_t iConfigCnt = (sizeof(oConfigValues)/sizeof(oConfigValues[0]));
 
 xmrstak::coin_selection coins[] = {
 	// name, userpool, devpool, default_pool_suggestion
-	{ "aeon7",               {cryptonight_aeon, cryptonight_lite, 7u},     {cryptonight_aeon, cryptonight_lite, 7u},     "mine.aeon-pool.com:5555" },
-	{ "bbscoin",             {cryptonight_monero, cryptonight, 3u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "croat",               {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "cryptonight",         {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "cryptonight_heavy",   {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
-	{ "cryptonight_lite",    {cryptonight_aeon, cryptonight_lite, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr },
-	{ "cryptonight_lite_v7", {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr },
-	{ "cryptonight_v7",      {cryptonight_monero, cryptonight_monero, 0u}, {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "edollar",             {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "electroneum",         {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "graft",               {cryptonight_monero, cryptonight, 8u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "haven",               {cryptonight_heavy, cryptonight, 2u},         {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
-	{ "intense",             {cryptonight_monero, cryptonight, 4u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "karbo",               {cryptonight_monero, cryptonight, 255u},      {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "monero7",             {cryptonight_monero, cryptonight_monero, 0u}, {cryptonight_monero, cryptonight_monero, 0u}, "pool.usxmrpool.com:3333" },
-	{ "stellite",            {cryptonight_monero, cryptonight, 3u},        {cryptonight_monero, cryptonight_monero, 0u}, nullptr },
-	{ "sumokoin",            {cryptonight_heavy, cryptonight_heavy, 0u},   {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
-	{ "turtlecoin",          {cryptonight_lite, cryptonight_aeon, 255u},   {cryptonight_aeon, cryptonight_lite, 7u},     nullptr }
+	{ "aeon7",               {cryptonight_aeon, cryptonight_aeon, 0u},            {cryptonight_aeon, cryptonight_aeon, 0u},     "mine.aeon-pool.com:5555" },
+	{ "bbscoin",             {cryptonight_aeon, cryptonight_aeon, 0u},            {cryptonight_aeon, cryptonight_aeon, 0u}, nullptr },
+	{ "bittube",             {cryptonight_heavy, cryptonight_bittube2, 255u},     {cryptonight_heavy, cryptonight_heavy, 0u},"mining.bit.tube:13333"},
+	{ "cryptonight",         {cryptonight_monero_v8, cryptonight, 255u},          {cryptonight_monero_v8, cryptonight_monero_v8, 0u}, nullptr },
+	{ "cryptonight_bittube2",{cryptonight_heavy, cryptonight_bittube2, 255u},     {cryptonight_heavy, cryptonight_heavy, 0u},nullptr},
+	{ "cryptonight_masari",  {cryptonight_monero_v8, cryptonight_masari, 255u},   {cryptonight_monero_v8, cryptonight_monero_v8, 0u},nullptr },
+	{ "cryptonight_haven",   {cryptonight_heavy, cryptonight_haven, 255u},        {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
+	{ "cryptonight_heavy",   {cryptonight_heavy, cryptonight_heavy, 0u},          {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
+	{ "cryptonight_lite",    {cryptonight_aeon, cryptonight_lite, 255u},          {cryptonight_aeon, cryptonight_aeon, 0u},     nullptr },
+	{ "cryptonight_lite_v7", {cryptonight_aeon, cryptonight_aeon, 0u},            {cryptonight_aeon, cryptonight_aeon, 0u},     nullptr },
+	{ "cryptonight_lite_v7_xor", {cryptonight_aeon, cryptonight_ipbc, 255u},      {cryptonight_aeon, cryptonight_aeon, 0u}, nullptr },
+	{ "cryptonight_v7",      {cryptonight_monero_v8, cryptonight_monero, 255u},   {cryptonight_monero_v8, cryptonight_monero, 8u}, nullptr },
+	{ "cryptonight_v8",      {cryptonight_monero, cryptonight_monero_v8, 255u},   {cryptonight_monero_v8, cryptonight_monero, 8u}, nullptr },
+	{ "cryptonight_v7_stellite", {cryptonight_monero_v8, cryptonight_stellite, 255u}, {cryptonight_monero_v8, cryptonight_monero_v8, 0u}, nullptr },
+	{ "graft",               {cryptonight_monero_v8, cryptonight_monero, 255u},   {cryptonight_monero_v8, cryptonight_monero, 8u}, nullptr },
+	{ "haven",               {cryptonight_heavy, cryptonight_haven, 255u},        {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
+	{ "intense",             {cryptonight_monero_v8, cryptonight_monero, 255u},   {cryptonight_monero_v8, cryptonight_monero, 8u}, nullptr },
+	{ "masari",              {cryptonight_monero_v8, cryptonight_masari, 255u},   {cryptonight_monero_v8, cryptonight_monero_v8, 0u},nullptr },
+	{ "monero",              {cryptonight_monero_v8, cryptonight_monero, 8u},     {cryptonight_monero_v8, cryptonight_monero, 8u}, "pool.usxmrpool.com:3333" },
+	{ "qrl",             	 {cryptonight_monero_v8, cryptonight_monero, 255u},   {cryptonight_monero_v8, cryptonight_monero, 8u}, nullptr },
+	{ "ryo",                 {cryptonight_heavy, cryptonight_heavy, 0u},          {cryptonight_heavy, cryptonight_heavy, 0u},   nullptr },
+	{ "stellite",            {cryptonight_monero_v8, cryptonight_stellite, 255u}, {cryptonight_monero_v8, cryptonight_monero_v8, 0u}, nullptr },
+	{ "turtlecoin",          {cryptonight_aeon, cryptonight_aeon, 0u},            {cryptonight_aeon, cryptonight_aeon, 0u},     nullptr }
 };
 
-constexpr size_t coin_alogo_size = (sizeof(coins)/sizeof(coins[0]));
+constexpr size_t coin_algo_size = (sizeof(coins)/sizeof(coins[0]));
 
 inline bool checkType(Type have, Type want)
 {
@@ -309,7 +313,7 @@ std::string jconf::GetMiningCoin()
 void jconf::GetAlgoList(std::string& list)
 {
 	list.reserve(256);
-	for(size_t i=0; i < coin_alogo_size; i++)
+	for(size_t i=0; i < coin_algo_size; i++)
 	{
 		list += "\t- ";
 		list += coins[i].coin_name;
@@ -320,15 +324,8 @@ void jconf::GetAlgoList(std::string& list)
 bool jconf::IsOnAlgoList(std::string& needle)
 {
 	std::transform(needle.begin(), needle.end(), needle.begin(), ::tolower);
-	
-	if(needle == "monero")
-	{
-		printer::inst()->print_msg(L0, "You entered Monero as coin name. Monero will hard-fork the PoW.\nThis means it will stop being compatible with other cryptonight coins.\n"
-			"Please use 'monero7' (support auto switch to new POW) if you want to mine Monero, \nor name the coin that you want to mine.");
-		return false;
-	}
 
-	for(size_t i=0; i < coin_alogo_size; i++)
+	for(size_t i=0; i < coin_algo_size; i++)
 	{
 		if(needle == coins[i].coin_name)
 			return true;
@@ -339,8 +336,8 @@ bool jconf::IsOnAlgoList(std::string& needle)
 const char* jconf::GetDefaultPool(const char* needle)
 {
 	const char* default_example = "pool.example.com:3333";
-	
-	for(size_t i=0; i < coin_alogo_size; i++)
+
+	for(size_t i=0; i < coin_algo_size; i++)
 	{
 		if(strcmp(needle, coins[i].coin_name) == 0)
 		{
@@ -511,7 +508,7 @@ bool jconf::parse_config(const char* sFilename, const char* sFilenamePools)
 	for(uint32_t i=0; i < pool_cnt; i++)
 	{
 		const Value& oThdConf = prv->configValues[aPoolList]->GetArray()[i];
-		
+
 		if(!oThdConf.IsObject())
 		{
 			printer::inst()->print_msg(L0, "Invalid config file. pool_list must contain objects.");
@@ -601,16 +598,6 @@ bool jconf::parse_config(const char* sFilename, const char* sFilenamePools)
 	}
 #endif // _WIN32
 
-	if (prv->configValues[bFlushStdout]->IsBool())
-	{
-		bool bflush = prv->configValues[bFlushStdout]->GetBool();
-		printer::inst()->set_flush_stdout(bflush);
-		if (bflush)
-		{
-			printer::inst()->print_msg(L0, "Flush stdout forced.");
-		}
-	}
-
 	std::string ctmp = GetMiningCoin();
 	std::transform(ctmp.begin(), ctmp.end(), ctmp.begin(), ::tolower);
 
@@ -620,15 +607,8 @@ bool jconf::parse_config(const char* sFilename, const char* sFilenamePools)
 		return false;
 	}
 
-	for(size_t i=0; i < coin_alogo_size; i++)
+	for(size_t i=0; i < coin_algo_size; i++)
 	{
-		if(ctmp == "monero")
-		{
-			printer::inst()->print_msg(L0, "You entered Monero as coin name. Monero will hard-fork the PoW.\nThis means it will stop being compatible with other cryptonight coins.\n"
-				"Please use monero7 (support auto switch to new POW) if you want to mine Monero, or name the coin that you want to mine.");
-			return false;
-		}
-
 		if(ctmp == coins[i].coin_name)
 		{
 			currentCoin = coins[i];
