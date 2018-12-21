@@ -1,0 +1,27 @@
+#!/usr/bin/expect -f
+set force_conservative 0  ;# set to 1 to force conservative mode even if
+                          ;# script wasn't run conservatively originally
+if {$force_conservative} {
+        set send_slow {1 .1}
+        proc send {ignore arg} {
+                sleep .1
+                exp_send -s -- $arg
+        }
+}
+
+set timeout -1
+spawn ./AMD-APP-SDK-v3.0.130.136-GA-linux64.sh
+match_max 100000
+
+# Get through the license agreement
+expect {
+  "More" { send -- { }; exp_continue }
+  "Do you accept the licence (y/n)? " { send -- "y\r" }
+}
+expect -exact "y\r"
+
+expect {
+  "Non root user, asking the user for continuation of installation." { send -- "y\r\r" }
+  "AMD APP SDK v3.0 will be installed for all users." { send -- "\r" }
+}
+expect eof

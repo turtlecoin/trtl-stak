@@ -25,9 +25,49 @@ build_script:
   - cmake -G "Visual Studio 14 2015 Win64" -T v140,host=x64 .. -DCUDA_ARCH=30
   - cmake --build . --config Release --target install
 
+after_build:
+  - if not defined APPVEYOR_REPO_TAG_NAME (set APPVEYOR_REPO_TAG_NAME=%APPVEYOR_REPO_COMMIT%)
+  - cd bin\Release
+  - mkdir xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy *.exe xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy *.dll xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy C:\xmr-stak-dep\openssl\bin\* xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy ..\..\..\LICENSE xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy ..\..\..\THIRD-PARTY-LICENSES xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - 7z a xmr-stak-%APPVEYOR_REPO_TAG_NAME%-windows-CPU-NVIDIA-AMD.zip xmr-stak-%APPVEYOR_REPO_TAG_NAME%
+  - copy xmr-stak-%APPVEYOR_REPO_TAG_NAME%-windows-CPU-NVIDIA-AMD.zip ..\..\..\
+
+artifacts:
+  - path: xmr-stak-$(APPVEYOR_REPO_TAG_NAME)-windows-CPU-NVIDIA-AMD.zip
+    name: PackageRelease
+
 test_script:
   - cd c:\xmr-stak\build\bin\Release
   - dir
   - copy C:\xmr-stak-dep\openssl\bin\* .
   - set XMRSTAK_NOWAIT=1
   - xmr-stak.exe --help --noUAC
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: 5rEHSYHUQTauK5jsgzmCf+6G9UUyUiT2FTBf+YTO4CaKkxggG/BtS/4ie3JxMFtm
+    artifact: PackageRelease
+    draft: false
+    prerelease: false
+    on:
+      appveyor_repo_name: turtlecoin/trtl-stak
+      appveyor_repo_tag: true
+
+  - provider: S3
+    access_key_id:
+      secure: hirM3bbzB1HQ20nGdWkkJ9eEpK4RKoVvyrToN1mXl28=
+    secret_access_key:
+      secure: 1LKhMprGO93JTNIESzbwx9nUYTN9ni033JMyvZ8Vkv0P0V0IICAbybX5tpO+LgM+
+    bucket: turtlecoin
+    region: us-east-2
+    set_public: true
+    folder: xmrstak
+    artifact: PackageRelease
+    on:
+      appveyor_repo_name: turtlecoin/trtl-stak
