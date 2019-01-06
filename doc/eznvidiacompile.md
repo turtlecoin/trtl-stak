@@ -20,12 +20,6 @@
 
 `git clone https://github.com/turtlecoin/trtl-stak.git`
 
-## edit the donation file (optional)
-
-`nano trtl-stak/xmrstak/donate-level.hpp`
-
-Change the donation level in the file to 0.0 if desired
-
 ## make build directory and build (change -j threads to suit your processor)
 
 `mkdir trtl-stak/build && cd $_ && cmake -DOpenCL_ENABLE=OFF .. && make -j8`
