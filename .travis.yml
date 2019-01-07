@@ -120,11 +120,14 @@ script:
 before_deploy:
 - if [[ "${TRAVIS_TAG}" == "" ]]; then export TRAVIS_TAG=${TRAVIS_COMMIT} ; fi
 - cd bin
-- TARGETS="xmr-stak libxmr-stak-asm.a libxmr-stak-c.a libxmr-stak-backend.a"
+- TARGETS="xmr-stak"
 - if [ $TRAVIS_OS_NAME != osx ]; then strip ${TARGETS} ; fi
 - rm -rf xmr-stak-${TRAVIS_TAG}
 - mkdir xmr-stak-${TRAVIS_TAG}
 - cp ${TARGETS} xmr-stak-${TRAVIS_TAG}
+- if [[ -e libxmr-stak-asm.a ]]; then cp libxmr-stak-asm.a xmr-stak-${TRAVIS_TAG} ; fi
+- if [[ -e libxmr-stak-c.a ]]; then cp libxmr-stak-c.a xmr-stak-${TRAVIS_TAG} ; fi
+- if [[ -e libxmr-stak-backend.a ]]; then cp libxmr-stak-backend.a xmr-stak-${TRAVIS_TAG} ; fi
 - if [[ -e libxmrstak_cuda_backend.so ]]; then cp libxmrstak_cuda_backend.so xmr-stak-${TRAVIS_TAG} ; fi
 - if [[ -e libxmrstak_opencl_backend.so ]]; then cp libxmrstak_opencl_backend.so xmr-stak-${TRAVIS_TAG} ; fi
 - cp ../LICENSE ../THIRD-PARTY-LICENSES xmr-stak-${TRAVIS_TAG}
