@@ -20,6 +20,12 @@
 
 `git clone https://github.com/turtlecoin/trtl-stak.git`
 
+## set compiler to gcc-7
+
+`export CC=gcc-7`
+
+`export CXX=g++-7`
+
 ## make build directory and build (change -j threads to suit your processor)
 
 `mkdir trtl-stak/build && cd $_ && cmake -DOpenCL_ENABLE=OFF .. && make -j8`
