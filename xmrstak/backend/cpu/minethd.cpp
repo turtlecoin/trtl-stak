@@ -659,7 +659,7 @@ minethd::cn_hash_fun minethd::func_multi_selector(bool bHaveAes, bool bNoPrefetc
 
 		if (selected_asm != "off")
 		{
-			if (selected_asm == "intel_avx")
+			if (selected_asm == "intel_avx" && asm_version_str != "auto")
 			{
 				// Intel Ivy Bridge (Xeon v2, Core i7/i5/i3 3xxx, Pentium G2xxx, Celeron G1xxx)
 				if (N == 1)
