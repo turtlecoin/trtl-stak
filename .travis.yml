@@ -7,11 +7,9 @@ sudo: false
 language: cpp
 
 cache:
-  - apt: true
-    directories:
-      - $HOME/.cache/cuda
-      - $HOME/AMDAPPSDK-3.0
-  - ccache: true
+  apt: true
+  directories:
+    - $HOME/.cache/cuda
 
 addons:
   apt:
@@ -20,12 +18,10 @@ addons:
       - libmicrohttpd-dev
       - libssl-dev
       - libhwloc-dev
-      - expect
 
 env:
   global:
     - CUDA_ROOT: $HOME/.cache/cuda
-    - OpenCL_ROOT: $HOME/AMDAPPSDK-3.0
 
 matrix:
   include:
@@ -42,8 +38,7 @@ matrix:
       env:
         - CMAKE_CXX_COMPILER=g++-5
         - CMAKE_C_COMPILER=gcc-5
-        - XMRSTAK_CMAKE_FLAGS="-DCUDA_ARCH=30 -DOpenCL_ENABLE=ON"
-        - LABEL="linux-gcc-5-CPU-NVIDIA-AMD"
+        - XMRSTAK_CMAKE_FLAGS="-DCUDA_ARCH=30 -DOpenCL_ENABLE=OFF"
 
     - os: linux
       compiler: gcc
@@ -59,7 +54,6 @@ matrix:
         - CMAKE_CXX_COMPILER=g++-6
         - CMAKE_C_COMPILER=gcc-6
         - XMRSTAK_CMAKE_FLAGS="-DCUDA_ENABLE=OFF -DOpenCL_ENABLE=OFF"
-        - LABEL="linux-gcc-6-CPU"
 
     # test with disabled HWLOC, MICROHTTPD, OpenSSL and no accelerators
     - os: linux
@@ -76,7 +70,6 @@ matrix:
         - CMAKE_CXX_COMPILER=g++-6
         - CMAKE_C_COMPILER=gcc-6
         - XMRSTAK_CMAKE_FLAGS="-DCUDA_ENABLE=OFF -DOpenCL_ENABLE=OFF -DHWLOC_ENABLE=OFF -DOpenSSL_ENABLE=OFF -DMICROHTTPD_ENABLE=OFF"
-        - LABEL="linux-gcc-6-CPU-BARE"
 
     - os: linux
       compiler: gcc
@@ -92,13 +85,11 @@ matrix:
         - CMAKE_CXX_COMPILER=g++-7
         - CMAKE_C_COMPILER=gcc-7
         - XMRSTAK_CMAKE_FLAGS="-DCUDA_ENABLE=OFF -DOpenCL_ENABLE=OFF"
-        - LABEL="linux-gcc-7-CPU"
 
     - os: osx
       compiler: gcc
       env:
         - XMRSTAK_CMAKE_FLAGS="-DCUDA_ENABLE=OFF -DOpenCL_ENABLE=OFF"
-        - LABEL="osx-gcc-7-CPU"
 
 before_install:
   - . CI/checkPRBranch
@@ -107,55 +98,29 @@ before_install:
     fi
   - export PATH=$CUDA_ROOT/bin:$PATH
 
-script:
-  - travis_retry ./scripts/preinstall.sh
-  - if [ $TRAVIS_OS_NAME = osx ]; then
-      cmake -DXMR-STAK_COMPILE=generic -DMICROHTTPD_ENABLE=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl ${XMRSTAK_CMAKE_FLAGS} .;
-    else
-      cmake -DXMR-STAK_COMPILE=generic -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} ${XMRSTAK_CMAKE_FLAGS} .;
+install:
+
+  # CUDA
+  - if [ $TRAVIS_OS_NAME != osx ]; then
+      NVCC_FOUND=$(which nvcc >/dev/null && { echo 0; } || { echo 1; });
+      if [ $NVCC_FOUND -ne 0 ]; then
+        mkdir -p $CUDA_ROOT &&
+        cd $CUDA_ROOT &&
+        travis_retry wget https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_linux-run &&
+        ls -la &&
+        chmod u+x *-run &&
+        ./cuda_8.0.44_linux-run --silent --toolkit --toolkitpath=$CUDA_ROOT &&
+        rm -rf ./cuda_8.0.44_linux-run $CUDA_ROOT/{samples,jre,doc,share} &&
+        cd -;
+      fi
     fi;
-  - make VERBOSE=1 install -j2
+
+script:
+  - if [ $TRAVIS_OS_NAME = osx ]; then
+      brew install hwloc;
+      cmake -DMICROHTTPD_ENABLE=OFF -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl ${XMRSTAK_CMAKE_FLAGS} .;
+    else
+      cmake -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER} -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER} ${XMRSTAK_CMAKE_FLAGS} .;
+    fi;
+  - make VERBOSE=1 install
   - ./bin/xmr-stak --help
-
-before_deploy:
-- if [[ "${TRAVIS_TAG}" == "" ]]; then export TRAVIS_TAG=${TRAVIS_COMMIT} ; fi
-- cd bin
-- TARGETS="xmr-stak libxmr-stak-asm.a libxmr-stak-c.a libxmr-stak-backend.a"
-- if [ $TRAVIS_OS_NAME != osx ]; then strip ${TARGETS} ; fi
-- rm -rf xmr-stak-${TRAVIS_TAG}
-- mkdir xmr-stak-${TRAVIS_TAG}
-- cp ${TARGETS} xmr-stak-${TRAVIS_TAG}
-- if [[ -e libxmrstak_cuda_backend.so ]]; then cp libxmrstak_cuda_backend.so xmr-stak-${TRAVIS_TAG} ; fi
-- if [[ -e libxmrstak_opencl_backend.so ]]; then cp libxmrstak_opencl_backend.so xmr-stak-${TRAVIS_TAG} ; fi
-- cp ../LICENSE ../THIRD-PARTY-LICENSES xmr-stak-${TRAVIS_TAG}
-- tar cvfz xmr-stak-${TRAVIS_TAG}-${LABEL}.tar.gz xmr-stak-${TRAVIS_TAG}/
-- rm -rf builds
-- mkdir builds
-- cp xmr-stak-${TRAVIS_TAG}-${LABEL}.tar.gz builds
-- cd ..
-
-deploy:
-  - provider: releases
-    api_key:
-      secure: JNn3xDixsZsnbtR/pRlrmg369/LvnZKVnz1dclzsuNcDXwRijZ1IW97supoWQ8WwG3yJm8V3MJtu6nk5qgOg7M64Wdhz0XIOKuXvV/PEGokJkP3nXzVfXBKwfbjbH9L4/ETMAjrMQNiWde1Wr1uSW3KDhXdaMGFxzQWEwd4RnCwrKC1UtAXmoaZ+J0YUoWrQa/g+Qs1fc+p362G0fvWZYzLvSfe8fRJ+9cx8UJTNRENTHvtG1N5HYUXlRJy9c5c/XxoyZ3TmNJ5863W22zrJ8lomqwlL9G1w+2HNZ8S92QT6MMGT6o+CtKwk0F9mq9TWprSoDT0CAaQBlJZnRuLm3FQ3jIaZuQ4vNOVRqstKxFpj0wUr2NsdgZsTas2GYxuMOZT4vtJvxv5Utt0OJwEAAr9rsTexZmIZYJDs1tqljbvNXTPCTgGot/ypykfQMLjvoXBD29VZA7VNuPgje0lS72pgP0UXDNtoY2IDXbI734P/dgg6UYY1V5xr7Kkzr9wkc7FxzmP2kKpmXXaE6jW0DRlqbT9Olvp7IOFNd2YySftOlUcUH5QtTqBPnwioCV6GIwdFcXcms+OZnhh6Og1wINzKempPAuiBsxNLTOhLXVcEb8+uZa893mh4wRlCXp8dkvExAvsPGjzo5viXM6XyS47sxK7JTl7XDX+SUNmSDQ4=
-    file:
-      - xmr-stak-${TRAVIS_TAG}-${LABEL}.tar.gz
-    skip_cleanup: true
-    on:
-      repo: turtlecoin/trtl-stak
-      tags: true
-
-  - provider: s3
-    access_key_id:
-      secure: dpjhXzPs5UhF21IA6VSwxAJx58Qe228tFmyzipgFay+Q1tHagXgvEQYlp78iWjjk/SJdSj3PXAapxZd+qTNwic8ugFOGstTxUZ4YOftJRZXlCXVFUWN2F5Repi2Iy3nbJ623m4zHpHLojuBIrBQt31DZfiRcNbChaAitPYsUhh4H3Yq+ot+E3bfNdBVzLpeGZaoYQHGu6BdH4DDkyrVchbpoHl/CCPld/i4KA2ph0O2m+5VdutGWlAcy1OI1UVCENQPLFxalE+FT8o0GN/+akZkMALQ/38Y6tdQBDUajRRYUuc8blKQKLFgV+cB/pkw1CDATi8GH326GgZt5XAun3wfdXVLQcOHdwqD6U4QSKtEtofjTz/8gs5K4GG48JZKXCSK36eYBNLpJqEDG6JSfPL1MSt574NR1jSYzLNI2l2mYVfTFOYpghv1LiqIAApYtAJzgT5lOB/sSb4gsWQXyc7qTQpJTa9Nk13HIUoo6q3OOFUjR3mZX2jTbK3o8djvroBBHqap/47AzIIZ3cSvWW894bViE9rriR7I0LRtu7L8gxHXfc/+nC62tjqCopm8E6o55IWsavoIeXG0BBTTPGa8G2HMk6ElQ+rbbOkmnAFSjkdsd5hiARGEbcLaZJxyLAk+tWLjZ72fo4C/cmwGl/FmGpC4FlH0TY/3D7Em5WNY=
-    secret_access_key:
-      secure: XT6DrnESjvfc0WCaSRVHIQ7ev4AG+Yz1WPRbjqSgNl9N8LfDOZNjWaKr8K/7xD8wMvdAClA2SKaEBA4+RSd8T8gbTiN9oO3Gq06t3wPtgmp3M3PHILHM83I8ZSwa7mNtf2BB9qZFv0wQKc/Z6zd4taFu2qDaTxUrdoOmnmQHIXrM/3CcXkr2phh3giG7ENe/BhhFsx+jEymabQRt8IJh3sRNST2zl0GbLBw0fk01FxvPj7FNPtfQGAVp4xNc74YVGX6f8vxAaRv5jREWdg6m864BzcouBL8yD1NZ1shegDcUaBwrkiQipOCkLAJmYBbLLmhK/7NMkb3R6XazXwoGvz2Bq8hhRrkqb3Gs/U50JeBdAdpfKvY8879YHsi+uYmbpdHZ/55DRL4VLiLYkY6pqzdq/WLEAcNMglZHMW7olbBMB7YzMxY2Qtv+Ir3nEzFtkDpgQa6TuprBg5jFa+kjt8o3gQi0mlIS6SNr2CNAjzLF/CJiOrGaZfGFLTBp6d2UJTDO4ZpkpARKe3yFTZWdjGKD2yOoWlQ9nv/RgkECI2pOSuvuIQdAwWPW43ckYSaKrmCFq58TL4khKdehNvJla3FzJg+9z3x4i5LbWIsMToXUEmBoaKVKCjIj+tMmFByU8uGua2XR3SleAVonsEtGWHw1ADVMHqOqbhPASt2GGd0=
-    bucket: turtlecoin
-    skip_cleanup: true
-    acl: public_read
-    region: us-east-2
-    upload-dir: xmrstak
-    local-dir: bin/builds
-    on:
-      repo: turtlecoin/trtl-stak
-      all_branches: true

@@ -21,33 +21,40 @@ namespace xmrstak
 		bool        bNiceHash;
 		bool        bStall;
 		size_t      iPoolId;
-		uint32_t    bMajorVersion;
-		uint32_t    bMinorVersion;
+		uint64_t	iBlockHeight;
+		uint8_t*	ref_ptr;
 
-		miner_work() : iWorkSize(0), bNiceHash(false), bStall(true), iPoolId(invalid_pool_id), bMajorVersion(0), bMinorVersion(0) { }
+		miner_work() : iWorkSize(0), bNiceHash(false), bStall(true), iPoolId(invalid_pool_id), ref_ptr((uint8_t*)&iBlockHeight) { }
 
 		miner_work(const char* sJobID, const uint8_t* bWork, uint32_t iWorkSize,
-			uint64_t iTarget, bool bNiceHash, size_t iPoolId, const uint32_t bMajorVersion, const uint32_t bMinorVersion) : iWorkSize(iWorkSize),
-			iTarget(iTarget), bNiceHash(bNiceHash), bStall(false), iPoolId(iPoolId), bMajorVersion(bMajorVersion), bMinorVersion(bMinorVersion)
+			uint64_t iTarget, bool bNiceHash, size_t iPoolId, uint64_t iBlockHeiht) : iWorkSize(iWorkSize),
+			iTarget(iTarget), bNiceHash(bNiceHash), bStall(false), iPoolId(iPoolId), iBlockHeight(iBlockHeiht), ref_ptr((uint8_t*)&iBlockHeight) 
 		{
 			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(this->sJobID, sJobID, sizeof(miner_work::sJobID));
 			memcpy(this->bWorkBlob, bWork, iWorkSize);
+			memcpy(this->sJobID, sJobID, sizeof(miner_work::sJobID));
+		}
+
+		miner_work(miner_work&& from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
+			bStall(from.bStall), iPoolId(from.iPoolId), iBlockHeight(from.iBlockHeight), ref_ptr((uint8_t*)&iBlockHeight) 
+		{
+			assert(iWorkSize <= sizeof(bWorkBlob));
+			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
+			memcpy(this->sJobID, sJobID, sizeof(miner_work::sJobID));
 		}
 
 		miner_work(miner_work const&) = delete;
 
-		miner_work& operator=(miner_work const& from)
+		miner_work& operator=(miner_work&& from)
 		{
 			assert(this != &from);
 
-			iWorkSize = from.iWorkSize;
-			iTarget = from.iTarget;
-			bNiceHash = from.bNiceHash;
-			bStall = from.bStall;
+			iBlockHeight = from.iBlockHeight;
 			iPoolId = from.iPoolId;
-			bMajorVersion = from.bMajorVersion;
-			bMinorVersion = from.bMinorVersion;
+			bStall = from.bStall;
+			iWorkSize = from.iWorkSize;
+			bNiceHash = from.bNiceHash;
+			iTarget = from.iTarget;
 
 			assert(iWorkSize <= sizeof(bWorkBlob));
 			memcpy(sJobID, from.sJobID, sizeof(sJobID));
@@ -56,25 +63,22 @@ namespace xmrstak
 			return *this;
 		}
 
-		miner_work(miner_work&& from) : iWorkSize(from.iWorkSize), iTarget(from.iTarget),
-			bStall(from.bStall), iPoolId(from.iPoolId), bMajorVersion(from.bMajorVersion), bMinorVersion(from.bMinorVersion)
-		{
-			assert(iWorkSize <= sizeof(bWorkBlob));
-			memcpy(sJobID, from.sJobID, sizeof(sJobID));
-			memcpy(bWorkBlob, from.bWorkBlob, iWorkSize);
-		}
-
-		miner_work& operator=(miner_work&& from)
+		miner_work& operator=(miner_work const& from)
 		{
 			assert(this != &from);
 
-			iWorkSize = from.iWorkSize;
-			iTarget = from.iTarget;
-			bNiceHash = from.bNiceHash;
-			bStall = from.bStall;
+			iBlockHeight = from.iBlockHeight;
 			iPoolId = from.iPoolId;
-			bMajorVersion = from.bMajorVersion;
-			bMinorVersion = from.bMinorVersion;
+			bStall = from.bStall;
+			iWorkSize = from.iWorkSize;
+			bNiceHash = from.bNiceHash;
+			iTarget = from.iTarget;
+
+			if(!ref_ptr)
+				return *this;
+
+			for(size_t i=0; i <= 7 && iPoolId; i++)
+				ref_ptr[i] = from.ref_ptr[7-i];
 
 			assert(iWorkSize <= sizeof(bWorkBlob));
 			memcpy(sJobID, from.sJobID, sizeof(sJobID));
@@ -85,10 +89,6 @@ namespace xmrstak
 
 		uint8_t getVersion() const
 		{
-			if (bMajorVersion != 0)
-			{
-				return (uint8_t) bMajorVersion;
-			}
 			return bWorkBlob[0];
 		}
 

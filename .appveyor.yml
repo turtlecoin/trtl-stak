@@ -12,7 +12,7 @@ install:
   - curl -sL https://github.com/fireice-uk/xmr-stak-dep/releases/download/v1/xmr-stak-dep.zip -o xmr-stak-dep.zip
   - 7z x xmr-stak-dep.zip -o"c:\xmr-stak-dep" -y > nul
   - appveyor DownloadFile  https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_windows-exe -FileName cuda_8.0.44_windows.exe
-  - cuda_8.0.44_windows.exe -s compiler_8.0 cudart_8.0
+  - cuda_8.0.44_windows.exe -s compiler_8.0 cudart_8.0 nvrtc_8.0 nvrtc_dev_8.0
   - set PATH=%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\bin;%ProgramFiles%\NVIDIA GPU Computing Toolkit\CUDA\v8.0\libnvvp;%PATH%
   - nvcc -V
 
@@ -25,49 +25,9 @@ build_script:
   - cmake -G "Visual Studio 14 2015 Win64" -T v140,host=x64 .. -DCUDA_ARCH=30
   - cmake --build . --config Release --target install
 
-after_build:
-  - if not defined APPVEYOR_REPO_TAG_NAME (set APPVEYOR_REPO_TAG_NAME=%APPVEYOR_REPO_COMMIT%)
-  - cd bin\Release
-  - mkdir xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy *.exe xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy *.dll xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy C:\xmr-stak-dep\openssl\bin\* xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy ..\..\..\LICENSE xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy ..\..\..\THIRD-PARTY-LICENSES xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - 7z a xmr-stak-%APPVEYOR_REPO_TAG_NAME%-windows-CPU-NVIDIA-AMD.zip xmr-stak-%APPVEYOR_REPO_TAG_NAME%
-  - copy xmr-stak-%APPVEYOR_REPO_TAG_NAME%-windows-CPU-NVIDIA-AMD.zip ..\..\..\
-
-artifacts:
-  - path: xmr-stak-$(APPVEYOR_REPO_TAG_NAME)-windows-CPU-NVIDIA-AMD.zip
-    name: PackageRelease
-
 test_script:
   - cd c:\xmr-stak\build\bin\Release
   - dir
   - copy C:\xmr-stak-dep\openssl\bin\* .
   - set XMRSTAK_NOWAIT=1
   - xmr-stak.exe --help --noUAC
-
-deploy:
-  - provider: GitHub
-    auth_token:
-      secure: 5rEHSYHUQTauK5jsgzmCf+6G9UUyUiT2FTBf+YTO4CaKkxggG/BtS/4ie3JxMFtm
-    artifact: PackageRelease
-    draft: false
-    prerelease: false
-    on:
-      appveyor_repo_name: turtlecoin/trtl-stak
-      appveyor_repo_tag: true
-
-  - provider: S3
-    access_key_id:
-      secure: hirM3bbzB1HQ20nGdWkkJ9eEpK4RKoVvyrToN1mXl28=
-    secret_access_key:
-      secure: 1LKhMprGO93JTNIESzbwx9nUYTN9ni033JMyvZ8Vkv0P0V0IICAbybX5tpO+LgM+
-    bucket: turtlecoin
-    region: us-east-2
-    set_public: true
-    folder: xmrstak
-    artifact: PackageRelease
-    on:
-      appveyor_repo_name: turtlecoin/trtl-stak
