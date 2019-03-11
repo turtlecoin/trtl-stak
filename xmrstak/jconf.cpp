@@ -101,12 +101,13 @@ xmrstak::coin_selection coins[] = {
 	{ "cryptonight_r",           {POW(cryptonight_r)},         {POW(cryptonight_r),10,POW(cryptonight_monero_v8)}, nullptr },
 	{ "cryptonight_superfast",   {POW(cryptonight_superfast)}, {POW(cryptonight_gpu)}, nullptr },
 	{ "cryptonight_turtle",      {POW(cryptonight_turtle)},    {POW(cryptonight_turtle)},    nullptr },
-	{ "cryptonight_v7",          {POW(cryptonight_monero)},    {POW(cryptonight_gpu)}, nullptr },
-	{ "cryptonight_v8",          {POW(cryptonight_monero_v8)}, {POW(cryptonight_r),10,POW(cryptonight_monero_v8)}, nullptr },
-	{ "cryptonight_v8_half",     {POW(cryptonight_v8_half)},   {POW(cryptonight_gpu)}, nullptr },
-	{ "cryptonight_v8_reversewaltz", {POW(cryptonight_v8_reversewaltz)}, {POW(cryptonight_gpu)}, nullptr },
-	{ "cryptonight_v8_zelerius", {POW(cryptonight_v8_zelerius)},{POW(cryptonight_gpu)}, nullptr },
 	{ "cryptonight_v7_stellite", {POW(cryptonight_stellite)},  {POW(cryptonight_gpu)}, nullptr },
+	{ "cryptonight_v8_zelerius", {POW(cryptonight_v8_zelerius)},{POW(cryptonight_gpu)}, nullptr },
+	{ "cryptonight_v8_reversewaltz", {POW(cryptonight_v8_reversewaltz)}, {POW(cryptonight_gpu)}, nullptr },
+	{ "cryptonight_v8_half",     {POW(cryptonight_v8_half)},   {POW(cryptonight_gpu)}, nullptr },
+	{ "cryptonight_v8",          {POW(cryptonight_monero_v8)}, {POW(cryptonight_r),10,POW(cryptonight_monero_v8)}, nullptr },
+	{ "cryptonight_v7",          {POW(cryptonight_monero)},    {POW(cryptonight_gpu)}, nullptr },
+	{ "cryptonight_softshell",      {POW(cryptonight_softshell)},    {POW(cryptonight_softshell)},    nullptr },
 	{ "cryptonight_gpu",         {POW(cryptonight_gpu)},       {POW(cryptonight_gpu)},       "pool.ryo-currency.com:3333" },
 	{ "cryptonight_conceal",     {POW(cryptonight_conceal)},   {POW(cryptonight_gpu)}, nullptr },
 	{ "freehaven",               {POW(cryptonight_superfast)}, {POW(cryptonight_gpu)}, nullptr },
@@ -119,7 +120,7 @@ xmrstak::coin_selection coins[] = {
 	{ "ryo",                     {POW(cryptonight_gpu)},       {POW(cryptonight_gpu)}, "pool.ryo-currency.com:3333" },
 	{ "stellite",                {POW(cryptonight_v8_half)},   {POW(cryptonight_gpu)}, nullptr },
 	{ "turtlecoin",              {POW(cryptonight_turtle), 6u,POW(cryptonight_aeon)}, {POW(cryptonight_aeon)}, nullptr },
-	{ "plenteum",			     {POW(cryptonight_turtle)},    {POW(cryptonight_turtle)},    nullptr },
+	{ "plenteum",                {POW(cryptonight_softshell), 6u,POW(cryptonight_turtle)}, {POW(cryptonight_aeon)}, nullptr },
 	{ "zelerius",                {POW(cryptonight_v8_zelerius), 7, POW(cryptonight_monero_v8)},   {POW(cryptonight_gpu)}, nullptr }
 };
 

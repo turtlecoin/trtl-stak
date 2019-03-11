@@ -17,10 +17,15 @@ struct pool_job
 	uint32_t	iWorkLen;
 	uint32_t	iSavedNonce;
 	uint64_t	iBlockHeight = uint64_t(-1);
+	uint32_t	iMajorVersion;
+	uint32_t	iMinorVersion;
+	uint64_t	iMemory;
+	uint32_t	iWindow;
+	uint32_t	iMultiplier;
 
-	pool_job() : iWorkLen(0), iSavedNonce(0) {}
-	pool_job(const char* sJobID, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen) :
-		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0)
+	pool_job() : iWorkLen(0), iSavedNonce(0), iMajorVersion(0), iMinorVersion(0), iBlockHeight(0), iMemory(262144), iWindow(2048), iMultiplier(3) {}
+	pool_job(const char* sJobID, uint64_t iTarget, const uint8_t* bWorkBlob, uint32_t iWorkLen, const uint32_t iMajorVersion, const uint32_t iMinorVersion, const uint32_t iHeight, const uint64_t iMemory, const uint32_t iWindow, const uint32_t iMultiplier) :
+		iTarget(iTarget), iWorkLen(iWorkLen), iSavedNonce(0), iMajorVersion(iMajorVersion), iMinorVersion(iMinorVersion), iBlockHeight(iHeight), iMemory(iMemory), iWindow(iWindow), iMultiplier(iMultiplier)
 	{
 		assert(iWorkLen <= sizeof(pool_job::bWorkBlob));
 		memcpy(this->sJobID, sJobID, sizeof(pool_job::sJobID));

@@ -189,6 +189,7 @@ void minethd::work_main()
 	cpu::minethd::func_multi_selector<1>(&cpu_ctx, set_job, ::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
 
 	uint8_t version = 0;
+	uint64_t height = 0;
 	size_t lastPoolId = 0;
 
 	pGpuCtx->maxRawIntensity = pGpuCtx->rawIntensity;
@@ -220,22 +221,29 @@ void minethd::work_main()
 			continue;
 		}
 
+
 		uint8_t new_version = oWork.getVersion();
-		if(new_version != version || oWork.iPoolId != lastPoolId)
+		uint32_t new_height = oWork.getHeight();
+		uint64_t memory = oWork.getMemory();
+		uint32_t window = oWork.getWindow();
+		uint32_t multiplier = oWork.getMultiplier();
+
+		if(new_version != version || oWork.iPoolId != lastPoolId || height != new_height)
 		{
 			coinDescription coinDesc = ::jconf::inst()->GetCurrentCoinSelection().GetDescription(oWork.iPoolId);
 			if(new_version >= coinDesc.GetMiningForkVersion())
 			{
-				miner_algo = coinDesc.GetMiningAlgo();
+				miner_algo = coinDesc.GetMiningAlgo(new_height, memory, window, multiplier);;
 				cpu::minethd::func_multi_selector<1>(&cpu_ctx, set_job, ::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
 			}
 			else
 			{
-				miner_algo = coinDesc.GetMiningAlgoRoot();
+				miner_algo = coinDesc.GetMiningAlgoRoot(new_height, memory, window, multiplier);;
 				cpu::minethd::func_multi_selector<1>(&cpu_ctx, set_job, ::jconf::inst()->HaveHardwareAes(), true /*bNoPrefetch*/, miner_algo);
 			}
 			lastPoolId = oWork.iPoolId;
 			version = new_version;
+			height = new_height;
 		}
 
 		if(set_job != nullptr)

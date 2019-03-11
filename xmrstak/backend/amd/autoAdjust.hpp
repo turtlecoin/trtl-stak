@@ -174,6 +174,10 @@ private:
 				numUnroll = 1;
 			}
 
+			// increase all intensity limits by eight for turtle
+			if (::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_turtle)
+				maxThreads *= 8u;
+
 			// keep 128MiB memory free (value is randomly chosen) from the max available memory
 			const size_t maxAvailableFreeMem = ctx.freeMem - minFreeMem;
 

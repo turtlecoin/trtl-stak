@@ -403,12 +403,18 @@ bool jpsock::process_pool_job(const opq_json_val* params, const uint64_t message
 	if (!params->val->IsObject())
 		return set_socket_error("PARSE error: Job error 1");
 
-	const Value *blob, *jobid, *target, *motd, *blk_height;
+	const Value *blob, *jobid, *target, *motd, *majorVersion, *minorVersion, *blk_height, *memory, *window, *multiplier;
 	jobid = GetObjectMember(*params->val, "job_id");
 	blob = GetObjectMember(*params->val, "blob");
 	target = GetObjectMember(*params->val, "target");
 	motd = GetObjectMember(*params->val, "motd");
+	majorVersion = GetObjectMember(*params->val, "blockMajorVersion");
+	minorVersion = GetObjectMember(*params->val, "blockMinorVersion");
 	blk_height = GetObjectMember(*params->val, "height");
+	memory = GetObjectMember(*params->val, "memory");
+	window = GetObjectMember(*params->val, "window");
+	multiplier = GetObjectMember(*params->val, "multiplier");
+
 
 	if (jobid == nullptr || blob == nullptr || target == nullptr ||
 		!jobid->IsString() || !blob->IsString() || !target->IsString())
@@ -480,8 +486,24 @@ bool jpsock::process_pool_job(const opq_json_val* params, const uint64_t message
 
 	iJobDiff = t64_to_diff(oPoolJob.iTarget);
 	
-	if(blk_height != nullptr && blk_height->IsUint64())
-		oPoolJob.iBlockHeight = bswap_64(blk_height->GetUint64());
+	if (majorVersion != nullptr && majorVersion->IsUint())
+		oPoolJob.iMajorVersion = majorVersion->GetUint();
+
+	if (minorVersion != nullptr && minorVersion->IsUint())
+		oPoolJob.iMinorVersion = minorVersion->GetUint();
+
+	if (blk_height != nullptr && blk_height->IsUint64())
+		oPoolJob.iBlockHeight = blk_height->GetUint64();
+
+	if (memory != nullptr && memory->IsUint())
+		oPoolJob.iMemory = memory->GetUint();
+
+	if (window != nullptr && window->IsUint())
+		oPoolJob.iWindow = window->GetUint();
+
+	if (multiplier != nullptr && multiplier->IsUint())
+		oPoolJob.iMultiplier = multiplier->GetUint();
+
 
 	std::unique_lock<std::mutex> lck(job_mutex);
 	oCurrentJob = oPoolJob;

@@ -30,7 +30,8 @@ enum xmrstak_algo_id
 
 	cryptonight_turtle = start_derived_algo_id,
 	cryptonight_v8_half = (start_derived_algo_id + 1),
-	cryptonight_v8_zelerius = (start_derived_algo_id + 2)
+	cryptonight_v8_zelerius = (start_derived_algo_id + 2),
+	cryptonight_softshell = (start_derived_algo_id + 3)
 	// please add the algorithm name to get_algo_name()
 };
 
@@ -41,7 +42,7 @@ enum xmrstak_algo_id
 inline std::string get_algo_name(xmrstak_algo_id algo_id)
 {
 	static std::array<std::string, 18> base_algo_names =
-	{{
+	{ {
 		"invalid_algo",
 		"cryptonight",
 		"cryptonight_lite",
@@ -62,15 +63,16 @@ inline std::string get_algo_name(xmrstak_algo_id algo_id)
 		"cryptonight_v8_reversewaltz" // used by graft
 	}};
 
-	static std::array<std::string, 3> derived_algo_names =
-	{{
+	static std::array<std::string, 4> derived_algo_names =
+	{ {
 		"cryptonight_turtle",
 		"cryptonight_v8_half", // used by masari and stellite
-		"cryptonight_v8_zelerius"
-	}};
+		"cryptonight_v8_zelerius",
+		"cryptonight_softshell"
+	} };
 
 
-	if(algo_id < start_derived_algo_id)
+	if (algo_id < start_derived_algo_id)
 		return base_algo_names[algo_id];
 	else
 		return derived_algo_names[algo_id - start_derived_algo_id];
@@ -120,7 +122,7 @@ struct xmrstak_algo
 
 	size_t Mem() const
 	{
-		if(base_algo == invalid_algo)
+		if (base_algo == invalid_algo)
 			return 0;
 		else
 			return mem;
@@ -152,7 +154,7 @@ struct xmrstak_algo
 	uint32_t Mask() const
 	{
 		// default is a 16 byte aligne mask
-		if(mask == 0)
+		if (mask == 0)
 			return ((mem - 1u) / 16) * 16;
 		else
 			return mask;
@@ -186,17 +188,17 @@ inline xmrstak_algo POW(xmrstak_algo_id algo_id)
 	static std::array<xmrstak_algo, 18> pow = {{
 		{invalid_algo, invalid_algo},
 		{cryptonight, cryptonight, CN_ITER, CN_MEMORY},
-		{cryptonight_lite, cryptonight_lite, CN_ITER/2, CN_MEMORY/2},
+		{cryptonight_lite, cryptonight_lite, CN_ITER / 2, CN_MEMORY / 2},
 		{cryptonight_monero, cryptonight_monero, CN_ITER, CN_MEMORY},
-		{cryptonight_heavy, cryptonight_heavy, CN_ITER/2, CN_MEMORY*2},
-		{cryptonight_aeon, cryptonight_aeon, CN_ITER/2, CN_MEMORY/2},
-		{cryptonight_ipbc, cryptonight_ipbc, CN_ITER/2, CN_MEMORY/2}, // equal to cryptonight_aeon with a small tweak in the miner code
+		{cryptonight_heavy, cryptonight_heavy, CN_ITER / 2, CN_MEMORY * 2},
+		{cryptonight_aeon, cryptonight_aeon, CN_ITER / 2, CN_MEMORY / 2},
+		{cryptonight_ipbc, cryptonight_ipbc, CN_ITER / 2, CN_MEMORY / 2}, // equal to cryptonight_aeon with a small tweak in the miner code
 		{cryptonight_stellite, cryptonight_stellite, CN_ITER, CN_MEMORY}, //equal to cryptonight_monero but with one tiny change
-		{cryptonight_masari, cryptonight_masari, CN_ITER/2, CN_MEMORY}, //equal to cryptonight_monero but with less iterations, used by masari
-		{cryptonight_haven, cryptonight_haven, CN_ITER/2, CN_MEMORY*2}, // equal to cryptonight_heavy with a small tweak
-		{cryptonight_bittube2, cryptonight_bittube2, CN_ITER/2, CN_MEMORY*2}, // derived from cryptonight_heavy with own aes-round implementation and minor other tweaks
+		{cryptonight_masari, cryptonight_masari, CN_ITER / 2, CN_MEMORY}, //equal to cryptonight_monero but with less iterations, used by masari
+		{cryptonight_haven, cryptonight_haven, CN_ITER / 2, CN_MEMORY * 2}, // equal to cryptonight_heavy with a small tweak
+		{cryptonight_bittube2, cryptonight_bittube2, CN_ITER / 2, CN_MEMORY * 2}, // derived from cryptonight_heavy with own aes-round implementation and minor other tweaks
 		{cryptonight_monero_v8, cryptonight_monero_v8, CN_ITER, CN_MEMORY},
-		{cryptonight_superfast, cryptonight_superfast, CN_ITER/4, CN_MEMORY},
+		{cryptonight_superfast, cryptonight_superfast, CN_ITER / 4, CN_MEMORY},
 		{cryptonight_gpu, cryptonight_gpu, CN_GPU_ITER, CN_MEMORY, CN_GPU_MASK},
 		{cryptonight_conceal, cryptonight_conceal, CN_ITER/2, CN_MEMORY},
 		{cryptonight_r_wow, cryptonight_r_wow, CN_ITER, CN_MEMORY},
@@ -204,16 +206,18 @@ inline xmrstak_algo POW(xmrstak_algo_id algo_id)
 		{cryptonight_v8_reversewaltz, cryptonight_v8_reversewaltz, CN_WALTZ_ITER, CN_MEMORY}
 	}};
 
-	static std::array<xmrstak_algo, 3> derived_pow =
-	{{
-		{cryptonight_turtle, cryptonight_monero_v8, CN_ITER/8, CN_MEMORY/8, CN_TURTLE_MASK},
-		{cryptonight_v8_half, cryptonight_monero_v8, CN_ITER/2, CN_MEMORY},
-		{cryptonight_v8_zelerius, cryptonight_monero_v8, CN_ZELERIUS_ITER, CN_MEMORY}
+	static std::array<xmrstak_algo, 4> derived_pow =
+	{ {
+		{cryptonight_turtle, cryptonight_monero_v8, CN_ITER / 8, CN_MEMORY / 8, CN_TURTLE_MASK},
+		{cryptonight_v8_half, cryptonight_monero_v8, CN_ITER / 2, CN_MEMORY},
+		{cryptonight_v8_zelerius, cryptonight_monero_v8, CN_ZELERIUS_ITER, CN_MEMORY},
+		{cryptonight_softshell, cryptonight_monero_v8, CN_ITER/8, CN_MEMORY/8 }
 		// {cryptonight_derived}
-	}};
+	} };
 
-	if(algo_id < start_derived_algo_id)
+	if (algo_id < start_derived_algo_id)
 		return pow[algo_id];
-	else
+	else {
 		return derived_pow[algo_id - start_derived_algo_id];
+	}
 }

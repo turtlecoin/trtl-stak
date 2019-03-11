@@ -369,7 +369,8 @@ void executor::on_pool_have_job(size_t pool_id, pool_job& oPoolJob)
 	dat.pool_id = pool_id;
 
 	xmrstak::globalStates::inst().switch_work(xmrstak::miner_work(oPoolJob.sJobID, oPoolJob.bWorkBlob,
-		oPoolJob.iWorkLen, oPoolJob.iTarget, pool->is_nicehash(), pool_id, oPoolJob.iBlockHeight), dat);
+		oPoolJob.iWorkLen, oPoolJob.iTarget, pool->is_nicehash(), pool_id, oPoolJob.iMajorVersion, oPoolJob.iMinorVersion, 
+		oPoolJob.iBlockHeight, oPoolJob.iMemory, oPoolJob.iWindow, oPoolJob.iMultiplier), dat);
 
 	if(dat.pool_id != pool_id)
 	{
