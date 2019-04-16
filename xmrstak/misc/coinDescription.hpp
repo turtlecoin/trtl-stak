@@ -27,11 +27,11 @@ namespace xmrstak
 		{}
 
 		inline xmrstak_algo GetMiningAlgo(uint32_t height = 0, uint64_t memory = 0, uint32_t window = 0, uint32_t multiplier = 0) const {
-			if (height > 0 && algo.algo_name == cryptonight_softshell)
+			if (height > 0 && algo.algo_name == cryptonight_gold)
 			{
-				uint32_t  CN_SOFT_SHELL_ITER = memory / 2;
-				uint32_t  CN_SOFT_SHELL_PAD_MULTIPLIER = (window / multiplier);
-				uint32_t  CN_SOFT_SHELL_ITER_MULTIPLIER = (CN_SOFT_SHELL_PAD_MULTIPLIER / 2);
+				uint32_t  CN_GOLD_ITER = memory / 2;
+				uint32_t  CN_GOLD_PAD_MULTIPLIER = (window / multiplier);
+				uint32_t  CN_GOLD_ITER_MULTIPLIER = (CN_GOLD_PAD_MULTIPLIER / 2);
 
 				uint32_t base_offset = (height % window);
 				int32_t offset = (height % (window * 2)) - (base_offset * 2);
@@ -39,23 +39,23 @@ namespace xmrstak
 					offset = base_offset;
 				}
 
-				uint32_t scratchpad = (CN_MEMORY / 8) + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
+				uint32_t scratchpad = (CN_MEMORY / 8) + (static_cast<uint32_t>(offset) * CN_GOLD_PAD_MULTIPLIER);
 				scratchpad = (static_cast<uint64_t>(scratchpad / 128)) * 128;
-				uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
+				uint32_t iterations = CN_GOLD_ITER + (static_cast<uint32_t>(offset) * CN_GOLD_ITER_MULTIPLIER);
 				uint32_t mask = ((((scratchpad / 2)) - 1u) / 16) * 16;
 
-				xmrstak_algo algo_softshell = { xmrstak_algo_id::cryptonight_softshell, xmrstak_algo_id::cryptonight_monero_v8, iterations/2, scratchpad, mask }; //iterations are divided by 2 to account for "lite" algo variation
-				return algo_softshell;
+				xmrstak_algo algo_gold = { xmrstak_algo_id::cryptonight_gold, xmrstak_algo_id::cryptonight_monero_v8, iterations/2, scratchpad, mask }; //iterations are divided by 2 to account for "lite" algo variation
+				return algo_gold;
 			}
 			return algo;
 
 		}
 		inline xmrstak_algo GetMiningAlgoRoot(uint32_t height = 0, uint64_t memory = 0, uint32_t window = 0, uint32_t multiplier = 0) const {
-			if (height > 0 && algo_root.algo_name == cryptonight_softshell)
+			if (height > 0 && algo_root.algo_name == cryptonight_gold)
 			{
-				uint32_t  CN_SOFT_SHELL_ITER = memory / 2;
-				uint32_t  CN_SOFT_SHELL_PAD_MULTIPLIER = (window / multiplier);
-				uint32_t  CN_SOFT_SHELL_ITER_MULTIPLIER = (CN_SOFT_SHELL_PAD_MULTIPLIER / 2);
+				uint32_t  CN_GOLD_ITER = memory / 2;
+				uint32_t  CN_GOLD_PAD_MULTIPLIER = (window / multiplier);
+				uint32_t  CN_GOLD_ITER_MULTIPLIER = (CN_GOLD_PAD_MULTIPLIER / 2);
 
 				uint32_t base_offset = (height % window);
 				int32_t offset = (height % (window * 2)) - (base_offset * 2);
@@ -63,13 +63,13 @@ namespace xmrstak
 					offset = base_offset;
 				}
 
-				uint32_t scratchpad = (CN_MEMORY / 8) + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_PAD_MULTIPLIER);
+				uint32_t scratchpad = (CN_MEMORY / 8) + (static_cast<uint32_t>(offset) * CN_GOLD_PAD_MULTIPLIER);
 				scratchpad = (static_cast<uint64_t>(scratchpad / 128)) * 128;
-				uint32_t iterations = CN_SOFT_SHELL_ITER + (static_cast<uint32_t>(offset) * CN_SOFT_SHELL_ITER_MULTIPLIER);
+				uint32_t iterations = CN_GOLD_ITER + (static_cast<uint32_t>(offset) * CN_GOLD_ITER_MULTIPLIER);
 				uint32_t mask = ((((scratchpad / 2)) - 1u) / 16) * 16;
 
-				xmrstak_algo algo_softshell = { xmrstak_algo_id::cryptonight_softshell, xmrstak_algo_id::cryptonight_monero_v8, iterations / 2, scratchpad, mask }; //iterations are divided by 2 to account for "lite" algo variation
-				return algo_softshell;
+				xmrstak_algo algo_gold = { xmrstak_algo_id::cryptonight_gold, xmrstak_algo_id::cryptonight_monero_v8, iterations / 2, scratchpad, mask }; //iterations are divided by 2 to account for "lite" algo variation
+				return algo_gold;
 			}
 			return algo_root;
 		}
