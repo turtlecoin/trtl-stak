@@ -1,3 +1,5 @@
+*** This project is archived. It does not support Chukwa and there are no immediate plans to add support for it. If you would like to contribute to this project and/or maintain it. Please let us know. ***
+
 ###### fireice-uk's and psychocrypt's
 # XMR-Stak - Cryptonight All-in-One Mining Software
 
